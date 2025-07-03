@@ -2,7 +2,6 @@ import dataclasses
 from typing import Optional, Tuple
 import jax
 import jax.numpy as jnp
-from src.shapes import Shape
 
 @dataclasses.dataclass
 class Domain:
@@ -18,7 +17,6 @@ class Domain:
     points: Tuple[int, ...]
     box: Tuple[Tuple[float, float], ...]
     units: str
-    geometry: Optional[Shape] = None
 
     def __post_init__(self):
         self.dx = tuple(

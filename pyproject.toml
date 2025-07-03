@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pde_opt"
+version = "0.1.0"
+description = "Library for PDE optimization and control with gradient-based methods and reinforcement learning"
+authors = [
+    { name = "Alexander E Cohen", email = "aecohen@mit.edu" }
+]
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["pde_opt*"]
+
+[tool.ruff]
+exclude = ["notebooks"]
