@@ -25,3 +25,37 @@ def initialize_Psi(N, width=100, vortexnumber=0):
             psi[i,j] *= phase     
     psi = psi.astype(complex)
     return jnp.array(psi)
+
+def add_vortex_to_wavefunction(psi, vortex_pos, vortex_strength=1, vortex_width=1):
+    """Add a vortex to an existing wavefunction at a specified position
+    
+    Args:
+        psi: existing wavefunction (complex array)
+        vortex_pos: (x, y) position of the vortex center
+        vortex_strength: winding number of the vortex (default=1)
+        vortex_width: width of the vortex core (default=10)
+        
+    Returns:
+        modified wavefunction with vortex added
+    """
+    N = psi.shape[0]
+    x, y = jnp.meshgrid(jnp.arange(N), jnp.arange(N), indexing='ij')
+    
+    # Distance from vortex center
+    r = jnp.sqrt((x - vortex_pos[0])**2 + (y - vortex_pos[1])**2)
+    
+    # Phase (vortex winding)
+    phi = vortex_strength * jnp.arctan2(y - vortex_pos[1], x - vortex_pos[0])
+    
+    # Create vortex phase factor
+    vortex_phase = jnp.exp(1j * phi)
+    
+    # Create smooth transition near vortex core to avoid singularity
+    # Use tanh to smoothly transition from 0 to 1 as we move away from core
+    core_factor = jnp.tanh(r / vortex_width)
+    
+    # Combine original wavefunction with vortex
+    # Near the core, use mostly vortex phase; far from core, use mostly original
+    psi_with_vortex = psi * (1 - core_factor) + psi * vortex_phase * core_factor
+    
+    return psi_with_vortex

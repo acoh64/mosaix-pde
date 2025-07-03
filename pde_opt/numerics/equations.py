@@ -52,7 +52,8 @@ class GPE2DTSControl(TimeSplittingODE):
     k: float
     e: float
     lights: Callable
-    smooth: bool = True
+    trap_factor: float = 1.0
+    smooth: bool = False
     
     def __post_init__(self):
         self.kx, self.ky = self.domain.fft_mesh()
@@ -68,5 +69,5 @@ class GPE2DTSControl(TimeSplittingODE):
         self.A_term = 0.5j*self.two_pi_i_k_2
     
     def B_terms(self, state, t):
-        tmp = -0.5j*((1+self.e)*self.xmesh**2 + (1-self.e)*self.ymesh**2) - 1j*self.control(t) - self.k*1j*(jnp.abs(state[...,0] + 1j*state[...,1])**2)
+        tmp = -0.5j*self.trap_factor*((1+self.e)*self.xmesh**2 + (1-self.e)*self.ymesh**2) - 1j*self.control(t) - self.k*1j*(jnp.abs(state[...,0] + 1j*state[...,1])**2)
         return jnp.stack([tmp.real, tmp.imag], axis=-1)
