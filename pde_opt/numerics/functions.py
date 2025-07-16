@@ -1,92 +1,204 @@
-import dataclasses
-
+import equinox as eqx
 import jax
 import jax.numpy as jnp
+from typing import Callable
+import dataclasses
+class LegendrePolynomialExpansion(eqx.Module):
+    params: jax.Array  # shape (max_degree+1,)
+    max_degree: int
+
+    def __init__(self, params: jax.Array):
+        super().__init__()
+        self.params = params
+        self.max_degree = len(params) - 1
+
+    def __call__(self, inputs):
+        # Inputs are assumed to be in [-1, 1]
+        result = self.params[0] * jnp.ones_like(inputs)
+        if self.max_degree >= 1:
+            result += self.params[1] * inputs
+        p_prev = jnp.ones_like(inputs)
+        p_curr = inputs
+        for n in range(2, self.max_degree + 1):
+            p_next = ((2 * n - 1) * inputs * p_curr - (n - 1) * p_prev) / n
+            result += self.params[n] * p_next
+            p_prev, p_curr = p_curr, p_next
+        return result
+
+class DiffusionLegendrePolynomials(eqx.Module):
+    expansion: LegendrePolynomialExpansion
+
+    def __init__(self, params: jax.Array):
+        super().__init__()
+        self.expansion = LegendrePolynomialExpansion(params)
+
+    @eqx.filter_jit
+    def __call__(self, inputs):
+        # Scale inputs to [-1, 1] and apply exp to ensure positivity
+        scaled_inputs = 2.0 * inputs - 1.0
+        return jnp.exp(self.expansion(scaled_inputs))
+
+class ChemicalPotentialLegendrePolynomials(eqx.Module):
+    expansion: LegendrePolynomialExpansion
+    prior_fn: Callable 
+
+    def __init__(self, params: jax.Array, prior_fn: Callable = None):
+        super().__init__()
+        self.expansion = LegendrePolynomialExpansion(params)
+        self.prior_fn = prior_fn
+
+    @eqx.filter_jit
+    def __call__(self, inputs):
+        # Scale inputs to [-1, 1]
+        scaled_inputs = 2.0 * inputs - 1.0
+        result = self.expansion(scaled_inputs)
+        if self.prior_fn is not None:
+            result += self.prior_fn(inputs)
+        return result
+    
+
+
 
 
 @dataclasses.dataclass
-class DiffusionLegendrePolynomials:
+class LegendrePolynomials:
     max_degree: int
 
     def __post_init__(self):
-        self.leg_poly = ExpLegendrePolynomials(self.max_degree)
-
-    def __call__(self, params, inputs):
-        return self.leg_poly(params, 2.0 * inputs - 1.0)
-
-
-@dataclasses.dataclass
-class ChemicalPotentialLegendrePolynomials:
-
-    max_degree: int
-
-    def __post_init__(self):
-        self.leg_poly = LegendrePolynomialsRecurrence(self.max_degree)
-
-    def __call__(self, params, inputs):
-        return self.leg_poly(params, 2.0 * inputs - 1.0)
-
-
-@dataclasses.dataclass
-class ExpLegendrePolynomials:
-
-    max_degree: int
-
-    def __post_init__(self):
-        leg_poly = LegendrePolynomialsRecurrence(self.max_degree)
-        self.func = jax.jit(lambda p, x: jnp.exp(leg_poly(p, x)))
+        if self.max_degree == 0:
+            self.func = jax.jit(lambda p, x: p[0] * self.T0(x))
+        elif self.max_degree == 1:
+            self.func = jax.jit(lambda p, x: p[0] * self.T0(x) + p[1] * self.T1(x))
+        elif self.max_degree == 2:
+            self.func = jax.jit(
+                lambda p, x: p[0] * self.T0(x) + p[1] * self.T1(x) + p[2] * self.T2(x)
+            )
+        elif self.max_degree == 3:
+            self.func = jax.jit(
+                lambda p, x: p[0] * self.T0(x)
+                + p[1] * self.T1(x)
+                + p[2] * self.T2(x)
+                + p[3] * self.T3(x)
+            )
+        elif self.max_degree == 4:
+            self.func = jax.jit(
+                lambda p, x: p[0] * self.T0(x)
+                + p[1] * self.T1(x)
+                + p[2] * self.T2(x)
+                + p[3] * self.T3(x)
+                + p[4] * self.T4(x)
+            )
+        elif self.max_degree == 5:
+            self.func = jax.jit(
+                lambda p, x: p[0] * self.T0(x)
+                + p[1] * self.T1(x)
+                + p[2] * self.T2(x)
+                + p[3] * self.T3(x)
+                + p[4] * self.T4(x)
+                + p[5] * self.T5(x)
+            )
+        elif self.max_degree == 6:
+            self.func = jax.jit(
+                lambda p, x: p[0] * self.T0(x)
+                + p[1] * self.T1(x)
+                + p[2] * self.T2(x)
+                + p[3] * self.T3(x)
+                + p[4] * self.T4(x)
+                + p[5] * self.T5(x)
+                + p[6] * self.T6(x)
+            )
+        elif self.max_degree == 7:
+            self.func = jax.jit(
+                lambda p, x: p[0] * self.T0(x)
+                + p[1] * self.T1(x)
+                + p[2] * self.T2(x)
+                + p[3] * self.T3(x)
+                + p[4] * self.T4(x)
+                + p[5] * self.T5(x)
+                + p[6] * self.T6(x)
+                + p[7] * self.T7(x)
+            )
+        elif self.max_degree == 8:
+            self.func = jax.jit(
+                lambda p, x: p[0] * self.T0(x)
+                + p[1] * self.T1(x)
+                + p[2] * self.T2(x)
+                + p[3] * self.T3(x)
+                + p[4] * self.T4(x)
+                + p[5] * self.T5(x)
+                + p[6] * self.T6(x)
+                + p[7] * self.T7(x)
+                + p[8] * self.T8(x)
+            )
+        elif self.max_degree == 9:
+            self.func = jax.jit(
+                lambda p, x: p[0] * self.T0(x)
+                + p[1] * self.T1(x)
+                + p[2] * self.T2(x)
+                + p[3] * self.T3(x)
+                + p[4] * self.T4(x)
+                + p[5] * self.T5(x)
+                + p[6] * self.T6(x)
+                + p[7] * self.T7(x)
+                + p[8] * self.T8(x)
+                + p[9] * self.T9(x)
+            )
+        elif self.max_degree == 10:
+            self.func = jax.jit(
+                lambda p, x: p[0] * self.T0(x)
+                + p[1] * self.T1(x)
+                + p[2] * self.T2(x)
+                + p[3] * self.T3(x)
+                + p[4] * self.T4(x)
+                + p[5] * self.T5(x)
+                + p[6] * self.T6(x)
+                + p[7] * self.T7(x)
+                + p[8] * self.T8(x)
+                + p[9] * self.T9(x)
+                + p[10] * self.T10(x)
+            )
 
     def __call__(self, params, inputs):
         return self.func(params, inputs)
 
+    def T0(self, x):
+        return 1.0 * jnp.ones_like(x)
 
-@dataclasses.dataclass
-class LegendrePolynomialsRecurrence:
+    def T1(self, x):
+        return x
 
-    max_degree: int
+    def T2(self, x):
+        return 0.5 * (3 * x**2 - 1.0)
 
-    def __post_init__(self):
-        self.func = jax.jit(self._evaluate_legendre)
+    def T3(self, x):
+        return 0.5 * (5 * x**3 - 3 * x)
 
-    def _evaluate_legendre(self, params, x):
-        # Compute all Legendre polynomials up to max_degree
-        polynomials = self._compute_all_legendre(x)
+    def T4(self, x):
+        return 0.125 * (35 * x**4 - 30 * x**2 + 3)
 
-        # Take only the coefficients we need based on params length
-        n_params = min(self.max_degree + 1, len(params))
-        used_polys = polynomials[:n_params]
-        used_params = params[:n_params]
+    def T5(self, x):
+        return 0.125 * (63 * x**5 - 70 * x**3 + 15 * x)
 
-        # Reshape params to allow broadcasting: (21,) -> (21,1,1,1)
-        reshaped_params = used_params[:, None, None, None]
+    def T6(self, x):
+        return 0.0625 * (231 * x**6 - 315 * x**4 + 105 * x**2 - 5)
 
-        # Now multiplication will broadcast correctly
-        weighted_polys = reshaped_params * used_polys
+    def T7(self, x):
+        return 0.0625 * (429 * x**7 - 693 * x**5 + 315 * x**3 - 35 * x)
 
-        # Sum along the first dimension
-        return jnp.sum(weighted_polys, axis=0)
+    def T8(self, x):
+        return 0.0078125 * (6435 * x**8 - 12012 * x**6 + 6930 * x**4 - 1260 * x**2 + 35)
 
-    def _compute_all_legendre(self, x):
-        """Compute all Legendre polynomials up to max_degree using jax.scan."""
-        # Initialize with P_0(x) and P_1(x)
-        p0 = jnp.ones_like(x)
-        p1 = x
-
-        # Define scan function to compute next polynomial using recurrence relation
-        def scan_fn(carry, n):
-            p_prev, p_curr = carry
-            # (n+1)P_{n+1}(x) = (2n+1)xP_n(x) - nP_{n-1}(x)
-            p_next = ((2 * n + 1) * x * p_curr - n * p_prev) / (n + 1)
-            return (p_curr, p_next), p_next
-
-        # Run scan to compute polynomials P_2 through P_max_degree
-        init_carry = (p0, p1)
-        _, higher_polys = jax.lax.scan(
-            scan_fn, init_carry, jnp.arange(1, self.max_degree)
+    def T9(self, x):
+        return 0.0078125 * (
+            12155 * x**9 - 25740 * x**7 + 18018 * x**5 - 4620 * x**3 + 315 * x
         )
 
-        # Combine P_0, P_1, and higher polynomials
-        return jnp.vstack([p0[None, :], p1[None, :], higher_polys])
-
-    def __call__(self, params, inputs):
-        return self.func(params, inputs)
+    def T10(self, x):
+        return 0.00390625 * (
+            46189 * x**10
+            - 109395 * x**8
+            + 90090 * x**6
+            - 30030 * x**4
+            + 3465 * x**2
+            - 63
+        )

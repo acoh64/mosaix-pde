@@ -5,6 +5,7 @@ from typing import Callable
 
 class SemiImplicitFourierSpectral(dfx.AbstractSolver):
 
+    required_equation_attrs = ['fourier_symbol', 'fft', 'ifft']
     A: float
     fourier_symbol: jax.Array
     fft: Callable
@@ -39,6 +40,7 @@ class SemiImplicitFourierSpectral(dfx.AbstractSolver):
     
 class StrangSplitting(dfx.AbstractSolver):
 
+    required_equation_attrs = ['A_term', 'dx', 'fft', 'ifft', 'time_scale']
     A_term: jax.Array
     dx: float
     fft: Callable
