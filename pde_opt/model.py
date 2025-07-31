@@ -17,12 +17,12 @@ class OptimizationModel:
         domain: domains.Domain,
         solver_type: Type[dfx.AbstractSolver],
     ):
-        """
-        equation_type: The class of the equation to optimize (from numerics/equations.py)
-        domain: The domain to use for the equation
-        parameters: Dictionary of all parameters (except domain) to instantiate the equation
-        optimize_params: List of parameter names to optimize over
-        solver_type: The class of the solver to use (e.g., diffrax.Tsit5)
+        """Class for optimizing parameters or functions of a PDE.
+
+        Args:
+            equation_type: The class of the equation to optimize (from numerics/equations)
+            domain: The domain to use for the equation
+            solver_type: The class of the solver to use for timestepping
         """
         self.equation_type = equation_type
         self.domain = domain
@@ -51,6 +51,9 @@ class OptimizationModel:
             adjoint: Adjoint mode for differentiation
             dt0: Initial time step
             max_steps: Maximum number of steps
+
+        Returns:
+            The solution to the equation at the given times in saveat
         """
         # Initialize the equation with the given parameters
         equation = self.equation_type(domain=self.domain, **parameters)
@@ -160,6 +163,13 @@ class OptimizationModel:
         return batch_residuals, reg 
 
     def train(self, data, inds, init_parameters, solver_parameters, weights, lambda_reg):
+        """
+        Train the model on the given data.
+        Args:
+            data: The data to train on
+            inds: The indices of the data to train on
+            init_parameters: The initial parameters for the model
+        """
 
         y0s = jnp.array([data["ys"][ind[0]] for ind in inds])
         values = jnp.array([jnp.array([data["ys"][ind[i]] for i in range(1, len(ind))]) for ind in inds])
