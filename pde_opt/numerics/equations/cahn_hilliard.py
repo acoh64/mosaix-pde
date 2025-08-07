@@ -1,14 +1,14 @@
 from abc import ABC, abstractmethod
 import dataclasses
 from typing import Callable, TypeVar, Union
-
+import jax
 import jax.numpy as jnp
 import equinox as eqx
 
 import pde_opt.numerics.utils.fft_utils as fftutils
 from ..domains import Domain
 from .base_eq import BaseEquation
-
+from ..utils.derivatives import gradient, laplacian
 
 
 @dataclasses.dataclass
@@ -17,6 +17,7 @@ class CahnHilliard2DPeriodic(BaseEquation):
     kappa: float
     mu: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
     D: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
+    derivs: str = "fourier"
     # TODO: add smoothing for fft (aliasing)
 
     def __post_init__(self):
@@ -30,14 +31,29 @@ class CahnHilliard2DPeriodic(BaseEquation):
         self.fft = jnp.fft.fftn
         self.ifft = jnp.fft.ifftn
         self.fourier_symbol = self.kappa * self.two_pi_i_k_4
+        
+        if self.derivs == "fourier":
+            self.rhs = jax.jit(self.rhs_fourier)
+        elif self.derivs == "fd":
+            self.gradx = jax.jit(gradient(self.domain, 0))
+            self.grady = jax.jit(gradient(self.domain, 1))
+            self.lap = jax.jit(laplacian(self.domain))
+            self.rhs = jax.jit(self.rhs_fd)
+        else:
+            raise ValueError(f"Invalid derivative type: {self.derivs}")
 
-    def rhs(self, state, t):
+    def rhs_fourier(self, state, t):
         state_hat = self.fft(state)
         tmp = self.fft(self.mu(state)) - self.kappa * (self.two_pi_i_k_2) * state_hat
         tmpx = self.fft(self.D(state) * self.ifft(self.two_pi_i_kx * tmp))
         tmpy = self.fft(self.D(state) * self.ifft(self.two_pi_i_ky * tmp))
         return self.ifft(self.two_pi_i_kx * tmpx + self.two_pi_i_ky * tmpy).real
 
+    def rhs_fd(self, state, t):
+        mu = self.mu(state) - self.kappa * self.lap(state)
+        gradx = self.gradx(self.D(state) * self.gradx(mu))
+        grady = self.grady(self.D(state) * self.grady(mu))
+        return gradx + grady
 
 # @dataclasses.dataclass
 # class CahnHilliard2DSmoothedBoundary(BaseEquation):
@@ -74,6 +90,7 @@ class CahnHilliard3DPeriodic(BaseEquation):
     kappa: float
     mu: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
     D: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
+    derivs: str = "fourier"
     # TODO: add smoothing for fft (aliasing)
 
     def __post_init__(self):
@@ -88,8 +105,20 @@ class CahnHilliard3DPeriodic(BaseEquation):
         self.two_pi_i_k_4 = (self.two_pi_i_k_2) ** 2
         self.fft = jnp.fft.fftn
         self.ifft = jnp.fft.ifftn
+        self.fourier_symbol = self.kappa * self.two_pi_i_k_4
+        
+        if self.derivs == "fourier":
+            self.rhs = jax.jit(self.rhs_fourier)
+        elif self.derivs == "fd":
+            self.gradx = jax.jit(gradient(self.domain, 0))
+            self.grady = jax.jit(gradient(self.domain, 1))
+            self.gradz = jax.jit(gradient(self.domain, 2))
+            self.lap = jax.jit(laplacian(self.domain))
+            self.rhs = jax.jit(self.rhs_fd)
+        else:
+            raise ValueError(f"Invalid derivative type: {self.derivs}")
 
-    def rhs(self, state, t):
+    def rhs_fourier(self, state, t):
         state_hat = self.fft(state)
         tmp = self.fft(self.mu(state)) - self.kappa * (self.two_pi_i_k_2) * state_hat
         tmpx = self.fft(self.D(state) * self.ifft(self.two_pi_i_kx * tmp))
@@ -98,3 +127,10 @@ class CahnHilliard3DPeriodic(BaseEquation):
         return self.ifft(
             self.two_pi_i_kx * tmpx + self.two_pi_i_ky * tmpy + self.two_pi_i_kz * tmpz
         ).real
+
+    def rhs_fd(self, state, t):
+        mu = self.mu(state) - self.kappa * self.lap(state)
+        gradx = self.gradx(self.D(state) * self.gradx(mu))
+        grady = self.grady(self.D(state) * self.grady(mu))
+        gradz = self.gradz(self.D(state) * self.gradz(mu))
+        return gradx + grady + gradz

@@ -163,6 +163,7 @@ class OptimizationModel:
         return batch_residuals, reg 
 
     def train(self, data, inds, init_parameters, solver_parameters, weights, lambda_reg):
+        # TODO: separately have the static params and the optimization params
         """
         Train the model on the given data.
         Args:
