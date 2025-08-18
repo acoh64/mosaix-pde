@@ -2,7 +2,7 @@ import jax
 import jax.numpy as jnp
 from typing import Union, Tuple, Optional, Callable, Dict, Any
 from .boundary_conditions import BoundaryType
-from pde_opt.numerics.utils.domain import Domain
+from ..domains import Domain
 
 
 # Keep the original laplace method for backward compatibility
@@ -51,7 +51,7 @@ def gradient(domain: Domain, axis: int):
 
     @jax.jit
     def gradient(field: jax.Array) -> jax.Array:
-        return (jnp.roll(field, -1, axis=axis) - field) / domain.dx[axis]
+        return (jnp.roll(field, -1, axis=axis) - jnp.roll(field, 1, axis=axis)) / (2 * domain.dx[axis])
 
     return gradient
 
