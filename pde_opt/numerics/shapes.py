@@ -25,6 +25,8 @@ class Shape:
     
     def __post_init__(self):
         self.smooth = self.smooth_shape()
+        self.smooth = jnp.where(self.smooth < 0.001, 0.001, self.smooth)
+        self.smooth = jnp.where(self.smooth > 0.99, 1.0, self.smooth)
         
     def smooth_shape(self) -> Array:
         """Smooths the shape using the Allen-Cahn equation with curvature minimization."""

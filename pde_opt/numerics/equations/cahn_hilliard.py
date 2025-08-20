@@ -21,6 +21,9 @@ from ..utils.derivatives import (
     _divx_f2c,
     _divy_f2c,
     _divz_f2c,
+    _gradx_c,
+    _grady_c,
+    _gradz_c,
 )
 
 
@@ -166,8 +169,11 @@ class CahnHilliard3DPeriodic(BaseEquation):
 class CahnHilliard2DSmoothedBoundary(BaseEquation):
     domain: Domain
     kappa: float
+    f: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
     mu: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
     D: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
+    theta: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
+    flux: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
     derivs: str = "fd"
 
     def rhs(self, state, t):
@@ -175,22 +181,45 @@ class CahnHilliard2DSmoothedBoundary(BaseEquation):
 
     def __post_init__(self):
         self.psi = self.domain.geometry.smooth
+        self.sqrt_kappa = jnp.sqrt(self.kappa)
+        self.hx, self.hy = self.domain.dx
+        self.norm_grad_psi = (
+            jnp.sqrt(
+                _gradx_c(self.psi, self.hx) ** 2 + _grady_c(self.psi, self.hy) ** 2
+            )
+            / self.psi
+        )
+        self.left_half = jnp.zeros_like(self.psi)
+        self.left_half = self.left_half.at[:50, :].set(1.0)
         if self.derivs == "fd":
             self.rhs = jax.jit(self.rhs_fd)
         else:
             raise ValueError(f"Invalid derivative type: {self.derivs}")
 
     def rhs_fd(self, state, t):
-        hx, hy = self.domain.dx
-        mu = self.mu(state) - self.kappa * _lap_2nd_2D(state, hx, hy)
+        f = self.f(state)
+        mu = self.mu(state)
         mask_avgx = _avgx_c2f(self.psi)
         mask_avgy = _avgy_c2f(self.psi)
-        inner_term = mu - (self.kappa / self.psi) * (_divx_f2c(mask_avgx * _gradx_c2f(state, hx), hx) + _divy_f2c(mask_avgy * _grady_c2f(state, hy), hy))
-        gradx_inner = _gradx_c2f(inner_term, hx)
-        grady_inner = _grady_c2f(inner_term, hy)
+        inner_term = (
+            mu
+            - (self.kappa / self.psi)
+            * (
+                _divx_f2c(mask_avgx * _gradx_c2f(state, self.hx), self.hx)
+                + _divy_f2c(mask_avgy * _grady_c2f(state, self.hy), self.hy)
+            )
+            - self.sqrt_kappa
+            * self.norm_grad_psi
+            * jnp.sqrt(2.0 * f)
+            * (jnp.cos(self.theta(t)) * self.left_half + jnp.cos(jnp.pi - self.theta(t)) * (1.0 - self.left_half))
+        )
+        gradx_inner = _gradx_c2f(inner_term, self.hx)
+        grady_inner = _grady_c2f(inner_term, self.hy)
         Du = self.D(state)
         Dx_f = _avgx_c2f(Du)
         Dy_f = _avgy_c2f(Du)
         Fx = mask_avgx * Dx_f * gradx_inner
         Fy = mask_avgy * Dy_f * grady_inner
-        return (_divx_f2c(Fx, hx) + _divy_f2c(Fy, hy)) / self.psi
+        return (
+            _divx_f2c(Fx, self.hx) + _divy_f2c(Fy, self.hy)
+        ) / self.psi + self.norm_grad_psi * self.flux(t)
