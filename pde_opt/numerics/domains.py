@@ -3,6 +3,8 @@ from typing import Optional, Tuple
 import jax
 import jax.numpy as jnp
 
+from .shapes import Shape
+
 @dataclasses.dataclass
 class Domain:
     """Sets up a simulation domain for the model.
@@ -17,6 +19,7 @@ class Domain:
     points: Tuple[int, ...]
     box: Tuple[Tuple[float, float], ...]
     units: str
+    geometry: Optional[Shape] = None
 
     def __post_init__(self):
         self.dx = tuple(
