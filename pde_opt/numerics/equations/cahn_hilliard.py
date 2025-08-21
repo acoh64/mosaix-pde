@@ -34,6 +34,9 @@ class CahnHilliard2DPeriodic(BaseEquation):
     mu: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
     D: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
     derivs: str = "fd"
+    fft = None
+    ifft = None
+    fourier_symbol = None
 
     def rhs(self, state, t):
         raise NotImplementedError("rhs method not implemented")

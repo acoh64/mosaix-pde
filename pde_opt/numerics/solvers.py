@@ -40,7 +40,7 @@ class SemiImplicitFourierSpectral(dfx.AbstractSolver):
     
 class StrangSplitting(dfx.AbstractSolver):
 
-    required_equation_attrs = ['A_term', 'dx', 'fft', 'ifft', 'time_scale']
+    required_equation_attrs = ['A_term', 'dx', 'fft', 'ifft']
     A_term: jax.Array
     dx: float
     fft: Callable
