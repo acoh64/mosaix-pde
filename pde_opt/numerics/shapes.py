@@ -60,3 +60,65 @@ class Shape:
         )
 
         return solution.ys[-1]
+
+    def get_shape_modes(self, N: Optional[int] = None):
+        """Get the first N eigenvectors of the graph Laplacian of the binary mask.
+        
+        Creates a graph where nodes are the 1-valued pixels, with edges between
+        adjacent pixels (left, right, top, bottom neighbors).
+        
+        Args:
+            N: Number of eigenvectors to return. If None, returns all eigenvectors.
+            
+        Returns:
+            Array of shape (num_nodes, N) containing the first N eigenvectors
+        """
+        # Get indices of 1-valued pixels
+        nodes = jnp.argwhere(self.binary > 0.5)
+        num_nodes = len(nodes)
+        
+        if N is None:
+            N = num_nodes
+            
+        # Build adjacency matrix
+        adj = jnp.zeros((num_nodes, num_nodes))
+        
+        # Check each node's neighbors
+        for i in range(num_nodes):
+            node = nodes[i]
+            # Check left, right, top, bottom neighbors
+            neighbors = [
+                [node[0]-1, node[1]],
+                [node[0]+1, node[1]], 
+                [node[0], node[1]-1],
+                [node[0], node[1]+1]
+            ]
+            
+            for n in neighbors:
+                # Find if neighbor exists in nodes list
+                n = jnp.array(n)
+                mask = (nodes == n).all(axis=1)
+                j = jnp.where(mask)[0]
+                if len(j) > 0:
+                    adj = adj.at[i,j[0]].set(1)
+                    adj = adj.at[j[0],i].set(1)
+                    
+        # Compute graph Laplacian
+        degree = jnp.sum(adj, axis=1)
+        degree_mat = jnp.diag(degree)
+        laplacian = degree_mat - adj
+        
+        # Get eigenvectors
+        eigenvals, eigenvecs = jnp.linalg.eigh(laplacian)
+        
+        # Initialize output array with zeros
+        shape = self.binary.shape
+        output = jnp.zeros((shape[0], shape[1], N))
+        
+        # Fill in eigenvector values at node locations
+        for i in range(N):
+            eigenvec = eigenvecs[:,i]
+            for node_idx, node_pos in enumerate(nodes):
+                output = output.at[node_pos[0], node_pos[1], i].set(eigenvec[node_idx])
+                
+        self.shape_basis = output
