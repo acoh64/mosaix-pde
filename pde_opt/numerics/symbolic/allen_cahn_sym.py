@@ -8,15 +8,21 @@ import jax.numpy as jnp  # only to return jnp arrays if you like; optional
 
 @dataclass
 class SymbolicAllenCahn2DPeriodic:
+    """Build exact RHS for Allen–Cahn equation, used only in tests.
+    
+    Args:
+        domain: Domain of the equation
+        kappa: Parameter of the equation
+        mu_sym: Symbolic chemical potential
+        R_sym: Symbolic reaction term
+        u_star: Test solution for the equation
     """
-    Build exact RHS for AC: RHS = div( D(u) * grad( mu(u) - kappa * Lap(u) ) )
-    on a periodic rectangle. Used only in tests.
-    """
+
     domain: object
     kappa: float
     mu_sym: Callable[[sp.Expr], sp.Expr]  # e.g., lambda u: u**3 - u
     R_sym:  Callable[[sp.Expr], sp.Expr]  # e.g., lambda u: 1
-    u_star: sp.Expr                         # manufactured solution u*(x,y,t)
+    u_star: sp.Expr                         # test solution u*(x,y,t)
 
     def __post_init__(self):
         x, y, t = sp.symbols('x y t', real=True)
@@ -36,9 +42,11 @@ class SymbolicAllenCahn2DPeriodic:
 
     # ---- Public evaluators for tests ----
     def u_exact(self, t: float):
+        """Exact solution for the equation"""
         X, Y = self.domain.mesh()
         return jnp.asarray(self._u_fn(X, Y, float(t)))
 
     def rhs_exact(self, t: float):
+        """Exact RHS for the equation"""
         X, Y = self.domain.mesh()
         return jnp.asarray(self._rhs_fn(X, Y, float(t)))

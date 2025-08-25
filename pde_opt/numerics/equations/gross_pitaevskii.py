@@ -41,6 +41,11 @@ class GPE2DTSControl(TimeSplittingEquation):
         )
         return jnp.stack([tmp.real, tmp.imag], axis=-1)
 
+    def rhs(self, state, t):
+        # TODO: implement this using fourier space (just A + B) and using finite difference
+        raise NotImplementedError("rhs method not implemented")
+
+
 @dataclasses.dataclass
 class GPE2DTSRot(TimeSplittingEquation):
     # TODO: need to fix this

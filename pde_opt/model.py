@@ -1,13 +1,15 @@
-from typing import Type, Dict, Any, List
+from typing import Type, Dict, Any
 
-from .numerics.equations import BaseEquation
-from .numerics import domains
 import diffrax as dfx
 import jax
 import jax.numpy as jnp
 import optimistix as optx
 from functools import partial
 import equinox as eqx
+
+from .numerics.equations import BaseEquation
+from .numerics import domains
+from .utils import check_equation_solver_compatibility, prepare_solver_params
 
 
 class OptimizationModel:
@@ -35,54 +37,7 @@ class OptimizationModel:
         self.equation_type = equation_type
         self.domain = domain
         self.solver_type = solver_type
-        self.check_equation_solver_compatibility()
-
-    def check_equation_solver_compatibility(self):
-        """Check that equation type has all required attributes specified by solver.
-
-        This is a check to ensure that the equation and solver are compatible.
-
-        Raises:
-            ValueError: If equation is missing any required attributes from solver.
-        """
-        # Get required attributes from solver if they exist
-        if not hasattr(self.solver_type, "required_equation_attrs"):
-            return
-
-        solver_required_attrs = self.solver_type.required_equation_attrs
-
-        # Check each required attribute exists in equation class
-        missing_attrs = []
-        for attr in solver_required_attrs:
-            if not hasattr(self.equation_type, attr):
-                missing_attrs.append(attr)
-
-        if missing_attrs:
-            raise ValueError(
-                f"Equation type {self.equation_type.__name__} is missing required "
-                f"attributes for solver {self.solver_type.__name__}: {missing_attrs}"
-            )
-
-    def _prepare_solver_params(self, solver_parameters, equation):
-        """Prepare solver parameters by extracting required equation attributes.
-
-        Some solvers require attributes from the equation to be passed to them.
-        This function prepares the solver parameters by extracting the required attributes from the equation.
-
-        Args:
-            solver_parameters (Dict[str, Any]): The solver parameters to use for the equation
-            equation (BaseEquation): The equation to solve
-
-        Returns:
-            Dict[str, Any]: The prepared solver parameters
-        """
-
-        full_solver_params = solver_parameters.copy()
-        if hasattr(self.solver_type, "required_equation_attrs"):
-            for attr_name in self.solver_type.required_equation_attrs:
-                full_solver_params[attr_name] = getattr(equation, attr_name)
-
-        return full_solver_params
+        check_equation_solver_compatibility(self.solver_type, self.equation_type)
 
     def solve(
         self,
@@ -113,7 +68,7 @@ class OptimizationModel:
         # Initialize the equation with the given parameters
         equation = self.equation_type(domain=self.domain, **parameters)
 
-        full_solver_params = self._prepare_solver_params(solver_parameters, equation)
+        full_solver_params = prepare_solver_params(self.solver_type, solver_parameters, equation)
 
         # Initialize the solver with solver_parameters and equation attributes
         solver = self.solver_type(**full_solver_params)

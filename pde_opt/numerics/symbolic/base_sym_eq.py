@@ -1,23 +1,19 @@
 from abc import ABC, abstractmethod
-import dataclasses
-from typing import Callable, TypeVar, Union
-
-import jax.numpy as jnp
-import equinox as eqx
-
-import pde_opt.numerics.utils.fft_utils as fftutils
-from pde_opt.numerics import domains
+from typing import TypeVar
 
 State = TypeVar("State")
 
 
 class BaseSymbolicEquation(ABC):
+    """Base class for symbolic equations."""
 
     @abstractmethod
     def u_exact(self, t: float) -> State:
+        """Exact solution for the equation"""
         raise NotImplementedError
     
     @abstractmethod
     def rhs_exact(self, t: float) -> State:
+        """Exact RHS for the equation"""
         raise NotImplementedError
     
