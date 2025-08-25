@@ -11,13 +11,21 @@ import equinox as eqx
 
 
 class OptimizationModel:
+    """Manage the solving and optimization of a PDE.
+
+    Attributes:
+        equation_type (Type[BaseEquation]): The equation to optimize (from numerics/equations)
+        domain (domains.Domain): The domain for solving the equation
+        solver_type (Type[dfx.AbstractSolver]): The solver to use for timestepping
+    """
+
     def __init__(
         self,
         equation_type: Type[BaseEquation],
         domain: domains.Domain,
         solver_type: Type[dfx.AbstractSolver],
     ):
-        """Class for optimizing parameters or functions of a PDE.
+        """Initialize the optimization model.
 
         Args:
             equation_type: The class of the equation to optimize (from numerics/equations)
@@ -31,6 +39,8 @@ class OptimizationModel:
 
     def check_equation_solver_compatibility(self):
         """Check that equation type has all required attributes specified by solver.
+
+        This is a check to ensure that the equation and solver are compatible.
 
         Raises:
             ValueError: If equation is missing any required attributes from solver.
@@ -54,8 +64,18 @@ class OptimizationModel:
             )
 
     def _prepare_solver_params(self, solver_parameters, equation):
-        """Prepare solver parameters by extracting required equation attributes."""
-        # Create the equation with the given parameters
+        """Prepare solver parameters by extracting required equation attributes.
+
+        Some solvers require attributes from the equation to be passed to them.
+        This function prepares the solver parameters by extracting the required attributes from the equation.
+
+        Args:
+            solver_parameters (Dict[str, Any]): The solver parameters to use for the equation
+            equation (BaseEquation): The equation to solve
+
+        Returns:
+            Dict[str, Any]: The prepared solver parameters
+        """
 
         full_solver_params = solver_parameters.copy()
         if hasattr(self.solver_type, "required_equation_attrs"):
@@ -78,18 +98,16 @@ class OptimizationModel:
         Solve the equation with given parameters.
 
         Args:
-            parameters: Dictionary of parameters to use for the equation
+            parameters (Dict[str, Any]): Dictionary of parameters to use for the equation
             y0: Initial condition
-            saveat: SaveAt object specifying when to save solution
-            solver_parameters: Dictionary of parameters for the solver
-            solver_equation_attrs: List of equation attribute names to pass to solver
-                                 (if None, will try to get from solver.required_equation_attrs)
-            adjoint: Adjoint mode for differentiation
-            dt0: Initial time step
-            max_steps: Maximum number of steps
+            ts: Timepoints to solve at and save solution at
+            solver_parameters (Dict[str, Any]): Dictionary of parameters for the solver
+            adjoint (dfx.AbstractAdjoint): Adjoint mode for differentiation
+            dt0 (float): Initial time step
+            max_steps (int): Maximum number of steps
 
         Returns:
-            The solution to the equation at the given times in saveat
+            The solution to the equation at the given times
         """
 
         # Initialize the equation with the given parameters
@@ -127,17 +145,17 @@ class OptimizationModel:
     ):
         """
         Compute residuals and regularization for a single initial condition.
+
         Args:
             parameters: parameters for the equation
-            y0: initial condition, shape (Nx, Ny)
-            values: observed values, shape (timepoints, Nx, Ny)
+            solver_parameters: parameters for the solver
+            y0: initial condition, shape (*spatial_dimensions)
+            values: observed values, shape (timepoints, *spatial_dimensions)
             ts: timepoints, shape (timepoints,)
-            weights: regularization weights, pytree matching parameters
-            lambda_reg: regularization coefficient
             adjoint: adjoint mode
+
         Returns:
-            data_residual: (timepoints, Nx, Ny)
-            reg: scalar
+            data_residual: (timepoints, *spatial_dimensions)
         """
         pred = self.solve(parameters, y0, ts, solver_parameters, adjoint=adjoint)
         data_residual = (
@@ -153,11 +171,13 @@ class OptimizationModel:
         lambda_reg,
     ):
         """
-        Compute regularization for a single initial condition.
+        Compute regularization of parameters.
+
         Args:
             parameters: parameters for the equation
-            weights: regularization weights
+            weights: regularization weights, pytree matching parameters
             lambda_reg: regularization coefficient
+
         Returns:
             reg: scalar
         """
@@ -196,18 +216,21 @@ class OptimizationModel:
     ):
         """
         Compute batched residuals and total regularization.
+
         Args:
             parameters: parameters for the equation
-            y0s: (batch_dim, Nx, Ny)
-            values: (batch_dim, timepoints, Nx, Ny)
+            y0s__values: tuple of (y0s, values), where y0s is a batch of initial conditions and values is a batch of observed values
+            solver_parameters: parameters for the solver
             ts: (timepoints,)
-            weights: pytree matching parameters
+            weights: regularization weights, pytree matching parameters
             lambda_reg: regularization coefficient
-            adjoint: adjoint mode
+            adjoint (dfx.AbstractAdjoint): adjoint mode
+
         Returns:
-            batch_residuals: (batch_dim, timepoints, Nx, Ny)
-            total_reg: scalar
+            batch_residuals: (batch_dim, timepoints, *spatial_dimensions)
+            reg: scalar
         """
+
         y0s, values = y0s__values
         single = partial(
             self.residual_single, parameters, solver_parameters, ts=ts, adjoint=adjoint
@@ -231,8 +254,21 @@ class OptimizationModel:
         adjoint=dfx.ForwardMode(),
     ):
         """
-        Compute the mean squared error for a single initial condition.
+        Compute the mean squared error.
+
+        Args:
+            parameters: parameters for the equation
+            y0s__values: tuple of (y0s, values), where y0s is a batch of initial conditions and values is a batch of observed values
+            solver_parameters: parameters for the solver
+            ts: (timepoints,)
+            weights: regularization weights, pytree matching parameters
+            lambda_reg: regularization coefficient
+            adjoint (dfx.AbstractAdjoint): adjoint mode
+
+        Returns:
+            mse: scalar
         """
+
         batch_residuals, reg = self.residuals(
             parameters,
             y0s__values,
@@ -257,10 +293,19 @@ class OptimizationModel:
     ):
         """
         Train the model on the given data.
+
         Args:
-            data: The data to train on
-            inds: The indices of the data to train on
-            init_parameters: The initial parameters for the model
+            data: Data to train on, a dictionary with keys "ys" and "ts"
+            inds: Indices of the data to train on
+            opt_parameters: Parameters of the equation to optimize
+            other_parameters: Parameters of the equation to hold constant
+            solver_parameters: Parameters for the solver
+            weights: Regularization weights, pytree matching opt_parameters
+            lambda_reg: Regularization coefficient
+            method: Method to use for optimization, "least_squares" uses Levenberg-Marquardt and ForwardMode adjoint, "mse" uses BFGS and RecursiveCheckpointAdjoint adjoint
+
+        Returns:
+            The optimized parameters, a dictionary combining the optimized parameters and other_parameters
         """
 
         # TODO: might need to make it so all parameters you want to optimize are jax arrays
