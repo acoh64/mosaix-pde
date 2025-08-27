@@ -6,8 +6,9 @@ import jax.numpy as jnp
 from ..domains import Domain
 from .base_eq import TimeSplittingEquation
 
-hbar = 1.05e-34 #J*s
-mass_Na23 = 3.8175406e-26 #kg (atomic mass of sodium-23)
+# Useful physics constants for the GPE
+hbar = 1.05e-34 # J*s
+mass_Na23 = 3.8175406e-26 # kg (atomic mass of sodium-23)
 a0 = 5.29177210903e-11 # Bohr radius
 
 @dataclasses.dataclass

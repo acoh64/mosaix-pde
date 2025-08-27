@@ -127,10 +127,6 @@ class PDEEnv(gym.Env):
 
     def _get_obs(self):
         """Convert state to observation."""
-        # return (
-        #     np.clip(np.array(self._state), self.state_min_max[0], self.state_min_max[1])
-        #     * 255
-        # ).astype(np.uint8)[None]
         return self.state_to_observation_func(self._state)
 
     def _get_info(self):
