@@ -166,7 +166,7 @@ class PDEEnv(gym.Env):
 
         offset = (
             action
-            if not self.discrete_action_space
+            if not self._action_to_direction
             else self._action_to_direction[action]
         )
 
@@ -198,7 +198,7 @@ class PDEEnv(gym.Env):
             t1=self.step_dt,
             dt0=self.numeric_dt,
             y0=self._state,
-            stepsize_controller=diffrax.PIDController(rtol=1e-4, atol=1e-6),
+            # stepsize_controller=diffrax.PIDController(rtol=1e-4, atol=1e-6),
             saveat=diffrax.SaveAt(t1=True),
             max_steps=1000000,
         )

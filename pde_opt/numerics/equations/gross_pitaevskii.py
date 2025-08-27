@@ -14,8 +14,13 @@ class GPE2DTSControl(TimeSplittingEquation):
     e: float
     lights: Callable
     trap_factor: float = 1.0
+    fft = None
+    ifft = None
+    A_term = None
+    dx = None
 
     def __post_init__(self):
+        self.dx = self.domain.dx[0]
         self.kx, self.ky = self.domain.fft_mesh()
         self.two_pi_i_kx = 2j * jnp.pi * self.kx
         self.two_pi_i_ky = 2j * jnp.pi * self.ky
@@ -42,8 +47,10 @@ class GPE2DTSControl(TimeSplittingEquation):
         return jnp.stack([tmp.real, tmp.imag], axis=-1)
 
     def rhs(self, state, t):
-        # TODO: implement this using fourier space (just A + B) and using finite difference
-        raise NotImplementedError("rhs method not implemented")
+        # # TODO: implement this using fourier space (just A + B) and using finite difference
+        # raise NotImplementedError("rhs method not implemented")
+        # this needs to be fixed
+        return self.B_terms(state, t)
 
 
 @dataclasses.dataclass
