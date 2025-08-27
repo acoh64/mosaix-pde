@@ -10,7 +10,6 @@ from .numerics.equations import BaseEquation
 from .numerics import domains
 from .utils import check_equation_solver_compatibility, prepare_solver_params
 
-# TODO: just make a file in pde_opt instead of in the environments folder. Can get rid of the environments folder.
 # TODO: create RL environments that can control multiple parameters at once.
 
 
@@ -46,7 +45,6 @@ class PDEEnv(gym.Env):
         end_time: float,
         step_dt: float,
         numeric_dt: float,
-        field_dim: int,
         state_to_observation_func: Callable,
         reward_function: Callable,
         reset_func: Callable,
@@ -70,7 +68,6 @@ class PDEEnv(gym.Env):
         self.end_time = end_time
         self.step_dt = step_dt
         self.numeric_dt = numeric_dt
-        self.field_dim = field_dim
         self.reward_function = reward_function
         self.reset_func = reset_func
         self.state_to_observation_func = state_to_observation_func
