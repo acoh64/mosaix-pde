@@ -2,6 +2,9 @@ import jax.numpy as jnp
 
 _TWO_PI = 2.0 * jnp.pi
 
+def density(psi):
+    return jnp.abs(psi)**2
+
 def _wrap_to_pi(x):
     # map to (-pi, pi]
     return (x + jnp.pi) % (2 * jnp.pi) - jnp.pi
