@@ -95,7 +95,6 @@ class AllenCahn2DSmoothedBoundary(BaseEquation):
     mu: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
     R: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
     theta: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
-    flux: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
     derivs: str = "fd"
 
     def rhs(self, state, t):
