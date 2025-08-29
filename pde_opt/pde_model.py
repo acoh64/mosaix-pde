@@ -76,7 +76,7 @@ class PDEModel:
 
         # Solve with diffrax
         solution = dfx.diffeqsolve(
-            dfx.ODETerm(jax.jit(lambda t, y, args: equation.rhs(y, t))),
+            dfx.ODETerm(jax.jit(lambda t, y, args: equation.rhs(y, t))), # TODO: might need to remove jit or change to filter_jit
             solver,
             t0=ts[0],
             t1=ts[-1],
@@ -235,7 +235,8 @@ class PDEModel:
             lambda_reg,
             adjoint=adjoint,
         )
-        return jnp.mean(batch_residuals**2) + reg
+        # return jnp.mean(batch_residuals**2) + reg
+        return jnp.sum(batch_residuals**2) + reg
 
     def train(
         self,
@@ -247,6 +248,7 @@ class PDEModel:
         weights,
         lambda_reg,
         method="least_squares",
+        max_steps=100,
     ):
         """
         Train the model on the given data.
@@ -306,7 +308,7 @@ class PDEModel:
             )
 
             sol = optx.least_squares(
-                residuals_wrapper, solver, opt_params, args=(y0s, values)
+                residuals_wrapper, solver, opt_params, args=(y0s, values), max_steps=max_steps, throw=False
             )
 
             res = eqx.combine(sol.value, opt_params_static)
@@ -333,7 +335,7 @@ class PDEModel:
                 verbose=frozenset({"step", "accepted", "loss", "step_size"}),
             )
 
-            sol = optx.minimise(mse_wrapper, solver, opt_params, args=(y0s, values))
+            sol = optx.minimise(mse_wrapper, solver, opt_params, args=(y0s, values), max_steps=max_steps, throw=False)
 
             res = eqx.combine(sol.value, opt_params_static)
 

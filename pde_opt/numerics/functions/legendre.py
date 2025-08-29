@@ -3,6 +3,7 @@ import jax
 import jax.numpy as jnp
 from typing import Callable
 import dataclasses
+
 class LegendrePolynomialExpansion(eqx.Module):
     params: jax.Array  # shape (max_degree+1,)
     max_degree: int
