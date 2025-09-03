@@ -12,7 +12,7 @@ from pde_opt.numerics.functions.cnn import PeriodicCNN
 import equinox as eqx
 import diffrax
 
-Nx = Ny = 64
+Nx = Ny = 128
 Lx = Ly = 0.01 * Nx
 
 domain = Domain(
@@ -109,4 +109,4 @@ ax[2].imshow(opt_sol[20], vmin=0.0, vmax=1.0)
 ax[3].imshow(opt_sol[50], vmin=0.0, vmax=1.0)
 ax[4].imshow(opt_sol[-1], vmin=0.0, vmax=1.0)
 plt.tight_layout()
-plt.savefig("optimized_solution2.png")
+plt.savefig("optimized_solution128_optax_1e-2.png")

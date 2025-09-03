@@ -129,6 +129,9 @@ class CahnHilliard3DPeriodic(BaseEquation):
     mu: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
     D: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
     derivs: str = "fd"
+    fft = None
+    ifft = None
+    fourier_symbol = None
     # TODO: add smoothing for fft (aliasing)
 
     def rhs(self, state, t):
@@ -178,13 +181,13 @@ class CahnHilliard3DPeriodic(BaseEquation):
         # gradients of μ at faces
         mux_f = _gradx_c2f(mu, hx)
         muy_f = _grady_c2f(mu, hy)
-        muz_f = _gradz_c2f(mu, hx, hy)
+        muz_f = _gradz_c2f(mu, hz)
 
         # mobility at faces
         Du = self.D(state)
         Dx_f = _avgx_c2f(Du)
         Dy_f = _avgy_c2f(Du)
-        Dz_f = _avgz_c2f(Du, hx, hy)
+        Dz_f = _avgz_c2f(Du)
 
         # fluxes at faces
         Fx = Dx_f * mux_f
@@ -192,7 +195,7 @@ class CahnHilliard3DPeriodic(BaseEquation):
         Fz = Dz_f * muz_f
 
         # divergence back to centers
-        return _divx_f2c(Fx, hx) + _divy_f2c(Fy, hy) + _divz_f2c(Fz, hx, hy)
+        return _divx_f2c(Fx, hx) + _divy_f2c(Fy, hy) + _divz_f2c(Fz, hz)
 
 
 @dataclasses.dataclass

@@ -6,6 +6,7 @@ import jax.numpy as jnp
 import optimistix as optx
 from functools import partial
 import equinox as eqx
+import optax
 
 from .numerics.equations import BaseEquation
 from .numerics import domains
@@ -235,8 +236,8 @@ class PDEModel:
             lambda_reg,
             adjoint=adjoint,
         )
-        # return jnp.mean(batch_residuals**2) + reg
-        return jnp.sum(batch_residuals**2) + reg
+        return jnp.mean(batch_residuals**2) + reg
+        # return jnp.sum(batch_residuals**2) + reg
 
     def train(
         self,
@@ -334,6 +335,13 @@ class PDEModel:
                 atol=1e-8,
                 verbose=frozenset({"step", "accepted", "loss", "step_size"}),
             )
+
+            # solver = optx.OptaxMinimiser(
+            #     optax.adam(learning_rate=1e-2),
+            #     rtol=1e-8,
+            #     atol=1e-8,
+            #     verbose=frozenset({"step", "loss"}),
+            # )
 
             sol = optx.minimise(mse_wrapper, solver, opt_params, args=(y0s, values), max_steps=max_steps, throw=False)
 
