@@ -12,6 +12,17 @@ authors = [
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.10"
+dependencies = [
+    "jax>=0.6.2",
+    "gymnasium>=1.1.1",
+    "diffrax>=0.7.0",
+    "equinox>=0.12.2",
+    "optimistix>=0.0.10",
+    "numpy>=2.2.6",
+    "scipy>=1.15.3",
+    "sympy>=1.14.0",
+    "einops>=0.8.1"
+]
 
 [tool.setuptools.packages.find]
 where = ["."]
