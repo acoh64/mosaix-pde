@@ -71,6 +71,22 @@ autodoc_default_options = {
     'exclude-members': '__weakref__'
 }
 
+# Mock imports that are difficult to install or cause issues during build
+autodoc_mock_imports = [
+    'jax',
+    'jaxlib', 
+    'gymnasium',
+    'diffrax',
+    'optax',
+    'equinox',
+    'optimistix',
+    'einops',
+    'sympy',
+    'scipy',
+    'numpy',
+    'matplotlib',
+]
+
 # -- Options for napoleon extension ------------------------------------------
 napoleon_google_docstring = True
 napoleon_numpy_docstring = True
