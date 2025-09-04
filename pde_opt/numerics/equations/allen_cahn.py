@@ -11,20 +11,32 @@ from ..utils.derivatives import _gradx_c, _grady_c, _avgx_c2f, _avgy_c2f, _divx_
 
 @dataclasses.dataclass
 class AllenCahn2DPeriodic(BaseEquation):
-    """Allen–Cahn equation in 2D with periodic boundary conditions.
+    """Allen-Cahn equation in 2D with periodic boundary conditions.
 
-    The equation is of the form
+    The Allen-Cahn equation describes phase transitions and interface dynamics.
+    The equation is:
 
-        d/dt u = -R(u)μ,   μ = μ_h(u) - κ Δu,
+    .. math::
+        \\frac{\\partial u}{\\partial t} = -R(u) \\mu
 
     where u is the concentration, R(u) is the reaction term, μ is the chemical potential, and κ is a parameter (the gradient energy coefficient).
+    The chemical potential is given by:
 
-    Args:
-        domain: Domain of the equation
-        kappa: Parameter of the equation
-        mu: Function for the chemical potential
-        R: Function for the reaction term
-        derivs: Type of derivative to use, "fourier" or "fd"
+    .. math::
+        \\mu = \\mu_h(u) - \\kappa \\nabla^2 u
+
+    Parameters
+    ----------
+    domain : Domain
+        The computational domain for the equation
+    kappa : float
+        Gradient energy coefficient (positive parameter)
+    mu : Callable or eqx.Module
+        Function for the chemical potential μ_h(u)
+    R : Callable or eqx.Module  
+        Function for the reaction term R(u)
+    derivs : str, default "fourier"
+        Type of derivative computation: "fourier" or "fd"
     """
 
     domain: Domain
@@ -55,38 +67,84 @@ class AllenCahn2DPeriodic(BaseEquation):
             raise ValueError(f"Invalid derivative type: {self.derivs}")
 
     def rhs_fourier(self, state, t):
-        """RHS of the Allen–Cahn equation, with derivatives in Fourier space"""
-
+        """Compute RHS using Fourier spectral method.
+        
+        Parameters
+        ----------
+        state : jax.Array
+            Current state u(x,y)
+        t : float
+            Current time
+            
+        Returns
+        -------
+        jax.Array
+            Right-hand side of the Allen-Cahn equation
+        """
         state_hat = self.fft(state)
         mu = self.ifft(self.fft(self.mu(state)) - self.kappa * (self.two_pi_i_k_2) * state_hat).real
         return -self.R(state) * mu
 
     def rhs_fd(self, state, t):
-        """2nd-order finite difference RHS for Allen–Cahn with periodic BCs"""
-
+        """Compute RHS using finite difference method.
+        
+        Parameters
+        ----------
+        state : jax.Array
+            Current state u(x,y)
+        t : float
+            Current time
+            
+        Returns
+        -------
+        jax.Array
+            Right-hand side of the Allen-Cahn equation
+        """
         hx, hy = self.domain.dx
         mu = self.mu(state) - self.kappa * _lap_2nd_2D(state, hx, hy)
         return -self.R(state) * mu
 
 @dataclasses.dataclass
 class AllenCahn2DSmoothedBoundary(BaseEquation):
-    """Allen–Cahn equation in 2D solved with the smoothed boundary method for arbitrary boundaries.
+    """Allen-Cahn equation with smoothed boundary method for arbitrary geometries.
 
-    The equation is of the form
+    This class implements the Allen-Cahn equation using the smoothed boundary
+    method, which allows for complex domain geometries through a smooth
+    level-set function ψ.
 
-        d/dt u = -R(u)μ,   μ = μ_h(u) - κ/ψ ∇·(ψ ∇u) - sqrt(κ) |∇ψ|/ψ sqrt(2f) cos(θ),
+    The equation is:
 
-    where u is the concentration, R(u) is the reaction term, μ is the chemical potential, κ is a parameter (the gradient energy coefficient), ψ is a smooth function that is 1 inside the domain and 0 outside, and f is the free energy density, and θ is the contact angle between the phase boundary and the interface.
+    .. math::
+        \\frac{\\partial u}{\\partial t} = -R(u) \\mu
 
-    Args:
-        domain: Domain of the equation
-        kappa: Parameter of the equation
-        f: Function for the free energy density
-        mu: Function for the chemical potential
-        R: Function for the reaction term
-        theta: Function for the contact angle
-        flux: Function for the normal flux
-        derivs: Type of derivative to use, "fd"
+    where the chemical potential includes boundary effects:
+
+    .. math::
+        \\mu = \\mu_h(u) - \\frac{\\kappa}{\\psi} \\nabla \\cdot (\\psi \\nabla u) 
+        - \\sqrt{\\kappa} \\frac{|\\nabla \\psi|}{\\psi} \\sqrt{2f} \\cos(\\theta)
+
+    Parameters
+    ----------
+    domain : Domain
+        The computational domain with geometry information
+    kappa : float
+        Gradient energy coefficient
+    f : Callable or eqx.Module
+        Free energy density function
+    mu : Callable or eqx.Module
+        Chemical potential function μ_h(u)
+    R : Callable or eqx.Module
+        Reaction term function R(u)
+    theta : Callable or eqx.Module
+        Contact angle function θ(t)
+    derivs : str, default "fd"
+        Derivative method (only "fd" supported)
+        
+    Notes
+    -----
+    - Uses smoothed boundary method for complex geometries
+    - ψ is the smooth level-set function (1 inside domain, 0 outside)
+    - Includes contact angle effects at boundaries
     """
 
     domain: Domain
