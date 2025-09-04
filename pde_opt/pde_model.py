@@ -6,7 +6,6 @@ import jax.numpy as jnp
 import optimistix as optx
 from functools import partial
 import equinox as eqx
-import optax
 
 from .numerics.equations import BaseEquation
 from .numerics import domains
@@ -14,12 +13,80 @@ from .utils import check_equation_solver_compatibility, prepare_solver_params
 
 
 class PDEModel:
-    """Manage the solving and optimization of a PDE.
+    """Manage the solving and optimization of partial differential equations (PDEs).
+
+    The PDEModel class provides a unified interface for solving PDEs and optimizing their
+    parameters using gradient-based methods. It supports both forward simulation and
+    parameter estimation.
+
+    The class is designed to work with JAX-based PDE implementations and leverages
+    automatic differentiation for efficient gradient computation during optimization.
 
     Attributes:
-        equation_type (Type[BaseEquation]): The equation to optimize (from numerics/equations)
-        domain (domains.Domain): The domain for solving the equation
-        solver_type (Type[dfx.AbstractSolver]): The solver to use for timestepping
+        equation_type (Type[BaseEquation]): The equation class to optimize. Must be a
+            subclass of BaseEquation from numerics.equations.
+        domain (domains.Domain): The spatial domain for solving the equation. Contains
+            grid information, boundary conditions, and coordinate systems.
+        solver_type (Type[dfx.AbstractSolver]): The numerical solver class for time
+            integration. Must be a subclass of dfx.AbstractSolver and can be existing 
+            diffrax solvers like Tsit5 or custom solvers like defined in numerics.solvers.
+
+    Example:
+        Basic usage for solving a PDE:
+        ```python
+        import jax.numpy as jnp
+        from pde_opt import PDEModel
+        from pde_opt.numerics.equations import AllenCahn2DPeriodic
+        from pde_opt.numerics import domains
+        import diffrax as dfx
+
+        # Create domain
+        domain = domains.Domain(
+            points=(64, 64),
+            box=((-1, 1), (-1, 1)),
+            units="dimensionless"
+        )
+
+        # Create model
+        model = PDEModel(
+            equation_type=AllenCahn2DPeriodic,
+            domain=domain,
+            solver_type=dfx.Tsit5
+        )
+
+        # Define parameters and initial condition
+        parameters = {"kappa": 0.1, "mu": lambda u: u**3 - u, "R": lambda u: 1.0}
+        y0 = jnp.ones((64, 64)) * 0.5
+        ts = jnp.linspace(0, 1, 11)
+
+        # Solve the PDE
+        solution = model.solve(parameters, y0, ts)
+        ```
+
+    Example:
+        Parameter optimization:
+        ```python
+        # Prepare training data
+        data = {"ys": [y0, y1, y2, ...], "ts": [0, 0.1, 0.2, ...]}
+        inds = [[0, 1, 2], [0, 1, 2]]  # Training trajectories
+
+        # Define parameters to optimize
+        opt_parameters = {"kappa": jnp.array(0.1)}
+        other_parameters = {"mu": lambda u: u**3 - u, "R": lambda u: 1.0}
+
+        # Train the model
+        optimized_params = model.train(
+            data=data,
+            inds=inds,
+            opt_parameters=opt_parameters,
+            other_parameters=other_parameters,
+            solver_parameters={},
+            weights={"kappa": jnp.ones_like(opt_parameters["kappa"])},
+            lambda_reg=1e-4,
+            method="least_squares",
+            max_steps=100
+        )
+        ```
     """
 
     def __init__(
@@ -28,12 +95,25 @@ class PDEModel:
         domain: domains.Domain,
         solver_type: Type[dfx.AbstractSolver],
     ):
-        """Initialize the optimization model.
+        """Initialize the PDE optimization model.
 
         Args:
-            equation_type: The class of the equation to optimize (from numerics/equations)
-            domain: The domain to use for the equation
-            solver_type: The class of the solver to use for timestepping
+            equation_type (Type[BaseEquation]): The equation class to optimize. Must be a
+                subclass of BaseEquation.
+            domain (domains.Domain): The spatial domain for the PDE. Defines the grid
+                resolution, spatial bounds, and coordinate system.
+            solver_type (Type[dfx.AbstractSolver]): The numerical solver for time
+                integration. Must be a subclass of dfx.AbstractSolver and can be existing diffrax solvers like Tsit5 or custom solvers like
+                defined in numerics.solvers.    
+
+        Raises:
+            ValueError: If the equation and solver are incompatible (e.g., solver
+                requires attributes that the equation doesn't provide).
+
+        Note:
+            The solver and equation compatibility is automatically checked during
+            initialization. Some solvers require specific attributes from equations
+            (e.g., fourier_symbol, fft, ifft for semi-implicit spectral methods).
         """
         self.equation_type = equation_type
         self.domain = domain
@@ -51,20 +131,57 @@ class PDEModel:
         max_steps=1000000,
         stepsize_controller=dfx.ConstantStepSize(),
     ):
-        """
-        Solve the equation with given parameters.
+        """Solve the PDE with given parameters and initial conditions.
+
+        This method performs forward simulation of the PDE using the specified solver
+        and parameters. The solution is computed at the requested time points and
+        returned.
 
         Args:
-            parameters (Dict[str, Any]): Dictionary of parameters to use for the equation
-            y0: Initial condition
-            ts: Timepoints to solve at and save solution at
-            solver_parameters (Dict[str, Any]): Dictionary of parameters for the solver
-            adjoint (dfx.AbstractAdjoint): Adjoint mode for differentiation
-            dt0 (float): Initial time step
-            max_steps (int): Maximum number of steps
+            parameters (Dict[str, Any]): Dictionary of equation parameters. Keys should
+                match the parameter names expected by the equation class.
+            y0: Initial condition array. Shape should match the spatial dimensions of
+                the domain.
+            ts: Time points at which to save the solution. Should be a 1D array of
+                increasing time values. The solver will integrate from ts[0] to ts[-1]
+                and return solutions at all specified time points.
+            solver_parameters (Dict[str, Any], optional): Additional parameters for the
+                solver. These are passed directly to the solver constructor.
+            adjoint (dfx.AbstractAdjoint, optional): Adjoint mode for automatic
+                differentiation. Defaults to ForwardMode() for forward-mode AD.
+                Use RecursiveCheckpointAdjoint() for reverse-mode AD when the number of parameters is large.
+            dt0 (float, optional): Initial time step for the solver. Defaults to 1e-6.
+                The solver may adapt this step size during integration.
+            max_steps (int, optional): Maximum number of integration steps. Defaults to
+                1,000,000.
+            stepsize_controller (dfx.AbstractStepSizeController, optional): Controller
+                for adaptive step sizing. Defaults to ConstantStepSize().
 
         Returns:
-            The solution to the equation at the given times
+            Solution array with shape (len(ts), *y0.shape). 
+
+        Example:
+            ```python
+            # Solve Allen-Cahn equation
+            parameters = {
+                "kappa": 0.1,
+                "mu": lambda u: u**3 - u,
+                "R": lambda u: 1.0
+            }
+            y0 = jnp.ones((64, 64)) * 0.5
+            ts = jnp.linspace(0, 1, 11)
+            
+            solution = model.solve(
+                parameters=parameters,
+                y0=y0,
+                ts=ts,
+                solver_parameters={},
+                adjoint=dfx.ForwardMode(),
+                dt0=1e-4,
+                max_steps=10000
+            )
+            # solution.shape = (11, 64, 64)
+            ```
         """
 
         # Initialize the equation with the given parameters
@@ -101,19 +218,24 @@ class PDEModel:
         ts,
         adjoint=dfx.ForwardMode(),
     ):
-        """
-        Compute residuals and regularization for a single initial condition.
+        """Compute residuals for a single trajectory.
+
+        This method computes the difference between model predictions and observed data
+        for a single initial condition and trajectory. It's used internally by the
+        batched residuals computation.
 
         Args:
-            parameters: parameters for the equation
-            solver_parameters: parameters for the solver
-            y0: initial condition, shape (*spatial_dimensions)
-            values: observed values, shape (timepoints, *spatial_dimensions)
-            ts: timepoints, shape (timepoints,)
-            adjoint: adjoint mode
+            parameters (Dict[str, Any]): Current parameter values for the equation.
+            solver_parameters (Dict[str, Any]): Parameters for the numerical solver.
+            y0 (jax.Array): Initial condition.
+            values (jax.Array): Observed values for computing residuals.
+            ts (jax.Array): Time points with shape (timepoints,).
+            adjoint (dfx.AbstractAdjoint, optional): Adjoint mode for automatic
+                differentiation. Defaults to ForwardMode().
 
         Returns:
-            data_residual: (timepoints, *spatial_dimensions)
+            Residuals array with shape (timepoints, *y0.shape).
+                The residuals are computed as: values - predicted[1:] (values should not include the initial condition).
         """
         pred = self.solve(parameters, y0, ts, solver_parameters, adjoint=adjoint)
         data_residual = (
@@ -128,16 +250,28 @@ class PDEModel:
         weights,
         lambda_reg,
     ):
-        """
-        Compute regularization of parameters.
+        """Compute parameter regularization term.
+
+        This method computes a weighted L2 regularization term for the parameters to
+        prevent overfitting and improve parameter stability during optimization. The
+        regularization is computed as:
+
+            reg = λ * Σ(w_i * p_i²)
+
+        where λ is the regularization coefficient, w_i are the weights, and p_i are
+        the parameter values.
 
         Args:
-            parameters: parameters for the equation
-            weights: regularization weights, pytree matching parameters
-            lambda_reg: regularization coefficient
+            parameters (Dict[str, Any]): Current parameter values for the equation.
+                Can contain nested structures (pytrees) of parameters.
+            weights (Dict[str, Any]): Regularization weights with the same structure
+                as parameters. Higher weights penalize large parameter values more
+                strongly. None values in weights are ignored.
+            lambda_reg (float): Regularization coefficient controlling the overall
+                strength of the regularization term.
 
         Returns:
-            reg: scalar
+            Scalar regularization term to be added to the loss function.
         """
         # Loop through weights keys and apply regularization to corresponding parameters
         reg = 0.0
@@ -172,21 +306,30 @@ class PDEModel:
         lambda_reg,
         adjoint=dfx.ForwardMode(),
     ):
-        """
-        Compute batched residuals and total regularization.
+        """Compute batched residuals and regularization for parameter optimization.
+
+        This method computes the difference between model predictions and observed data
+        for multiple trajectories simultaneously, along with parameter regularization.
+        It's used internally by the optimization algorithms in the train() method.
 
         Args:
-            parameters: parameters for the equation
-            y0s__values: tuple of (y0s, values), where y0s is a batch of initial conditions and values is a batch of observed values
-            solver_parameters: parameters for the solver
-            ts: (timepoints,)
-            weights: regularization weights, pytree matching parameters
-            lambda_reg: regularization coefficient
-            adjoint (dfx.AbstractAdjoint): adjoint mode
+            parameters (Dict[str, Any]): Current parameter values for the equation.
+            y0s__values (Tuple[jax.Array, jax.Array]): Tuple containing:
+                - y0s: Batch of initial conditions
+                - values: Batch of observed values
+            solver_parameters (Dict[str, Any]): Parameters for the numerical solver.
+            ts (jax.Array): Time points for the simulation.
+            weights (Dict[str, jax.Array]): Regularization weights for each parameter.
+                Should match the structure of parameters.
+            lambda_reg (float): Regularization coefficient controlling the strength
+                of parameter penalties.
+            adjoint (dfx.AbstractAdjoint, optional): Adjoint mode for automatic
+                differentiation. Defaults to ForwardMode().
 
         Returns:
-            batch_residuals: (batch_dim, timepoints, *spatial_dimensions)
-            reg: scalar
+            Tuple[jax.Array, float]: Tuple containing:
+                - batch_residuals: Residuals array with shape (batch_size, timepoints, *y0.shape)
+                - reg: Scalar regularization term
         """
 
         y0s, values = y0s__values
@@ -209,22 +352,33 @@ class PDEModel:
         ts,
         weights,
         lambda_reg,
-        adjoint=dfx.ForwardMode(),
+        adjoint=dfx.RecursiveCheckpointAdjoint(),
     ):
-        """
-        Compute the mean squared error.
+        """Compute the mean squared error loss for parameter optimization.
+
+        This method computes the mean squared error between model predictions and
+        observed data, plus a regularization term. It's used as the objective function
+        for the "mse" optimization method in the train() method.
+
+        The loss function is:
+            MSE = mean((predicted - observed)²) + λ * regularization
 
         Args:
-            parameters: parameters for the equation
-            y0s__values: tuple of (y0s, values), where y0s is a batch of initial conditions and values is a batch of observed values
-            solver_parameters: parameters for the solver
-            ts: (timepoints,)
-            weights: regularization weights, pytree matching parameters
-            lambda_reg: regularization coefficient
-            adjoint (dfx.AbstractAdjoint): adjoint mode
+            parameters (Dict[str, Any]): Current parameter values for the equation.
+            y0s__values (Tuple[jax.Array, jax.Array]): Tuple containing:
+                - y0s: Batch of initial conditions
+                - values: Batch of observed values
+            solver_parameters (Dict[str, Any]): Parameters for the numerical solver.
+            ts (jax.Array): Time points for the simulation.
+            weights (Dict[str, jax.Array]): Regularization weights for each parameter.
+                Should match the structure of parameters.
+            lambda_reg (float): Regularization coefficient controlling the strength
+                of parameter penalties.
+            adjoint (dfx.AbstractAdjoint, optional): Adjoint mode for automatic
+                differentiation. Defaults to RecursiveCheckpointAdjoint().
 
         Returns:
-            mse: scalar
+            float: Mean squared error loss including regularization term.
         """
 
         batch_residuals, reg = self.residuals(
@@ -251,21 +405,89 @@ class PDEModel:
         method="least_squares",
         max_steps=100,
     ):
-        """
-        Train the model on the given data.
+        """Train the model by optimizing parameters to fit observed data.
+
+        This method performs parameter estimation by minimizing the difference between
+        model predictions and observed data. It supports two optimization approaches:
+        least-squares (which uses the Levenberg-Marquardt algorithm) and mean squared error minimization
+        (which uses the BFGS algorithm).
 
         Args:
-            data: Data to train on, a dictionary with keys "ys" and "ts"
-            inds: Indices of the data to train on
-            opt_parameters: Parameters of the equation to optimize
-            other_parameters: Parameters of the equation to hold constant
-            solver_parameters: Parameters for the solver
-            weights: Regularization weights, pytree matching opt_parameters
-            lambda_reg: Regularization coefficient
-            method: Method to use for optimization, "least_squares" uses Levenberg-Marquardt and ForwardMode adjoint, "mse" uses BFGS and RecursiveCheckpointAdjoint adjoint
+            data (Dict[str, List]): Training data dictionary with keys:
+                - "ys": List of solution snapshots at different times
+                - "ts": List of corresponding time points
+                Example: {"ys": [y0, y1, y2, ...], "ts": [0, 0.1, 0.2, ...]}
+            inds (List[List[int]]): Indices specifying which data points to use for
+                each training trajectory. Each inner list represents a trajectory:
+                [initial_time_index, ...intermediate_indices...].
+                Example: [[0, 1, 2], [0, 1, 2]] for two trajectories using
+                time points 0, 1, 2.
+            opt_parameters (Dict[str, jax.Array]): Parameters to optimize.
+            other_parameters (Dict[str, Any]): Fixed parameters that won't be optimized.
+            solver_parameters (Dict[str, Any]): Parameters for the numerical solver
+                during optimization. Passed to the solver constructor.
+            weights (Dict[str, jax.Array]): Regularization weights for each parameter.
+                Should have the same structure as opt_parameters.
+            lambda_reg (float): Regularization coefficient. Controls the strength of
+                parameter regularization.
+            method (str, optional): Optimization method. Options:
+                - "least_squares": Uses Levenberg-Marquardt algorithm with ForwardMode
+                  adjoint. Best when parameter number is small (not using neural networks).
+                - "mse": Uses BFGS algorithm with RecursiveCheckpointAdjoint. Better
+                  when parameter number is large (using neural networks).
+            max_steps (int, optional): Maximum number of optimization iterations.
+                Defaults to 100.
 
         Returns:
-            The optimized parameters, a dictionary combining the optimized parameters and other_parameters
+            Dict[str, Any]: Optimized parameters combined with fixed parameters.
+            The returned dictionary contains both the optimized parameters and the
+            other_parameters, ready for use in the solve() method.
+
+        Example:
+            ```python
+            # Prepare training data
+            data = {
+                "ys": [y0, y1, y2, y3, y4],  # Solution snapshots
+                "ts": [0, 0.1, 0.2, 0.3, 0.4]  # Time points
+            }
+            
+            # Define training trajectories (using first 3 time points)
+            inds = [[0, 1, 2], [0, 1, 2]]  # Two identical trajectories
+            
+            # Parameters to optimize (must be JAX arrays)
+            opt_parameters = {
+                "kappa": jnp.array(0.1),
+                "diffusion": jnp.array(0.05)
+            }
+            
+            # Fixed parameters
+            other_parameters = {
+                "mu": lambda u: u**3 - u,
+                "R": lambda u: 1.0
+            }
+            
+            # Regularization weights
+            weights = {
+                "kappa": jnp.ones_like(opt_parameters["kappa"]),
+                "diffusion": jnp.ones_like(opt_parameters["diffusion"])
+            }
+            
+            # Train the model
+            optimized_params = model.train(
+                data=data,
+                inds=inds,
+                opt_parameters=opt_parameters,
+                other_parameters=other_parameters,
+                solver_parameters={},
+                weights=weights,
+                lambda_reg=1e-4,
+                method="least_squares",
+                max_steps=100
+            )
+            
+            # Use optimized parameters for prediction
+            solution = model.solve(optimized_params, y0, ts)
+            ```
         """
 
         # TODO: might need to make it so all parameters you want to optimize are jax arrays
@@ -335,13 +557,6 @@ class PDEModel:
                 atol=1e-8,
                 verbose=frozenset({"step", "accepted", "loss", "step_size"}),
             )
-
-            # solver = optx.OptaxMinimiser(
-            #     optax.adam(learning_rate=1e-2),
-            #     rtol=1e-8,
-            #     atol=1e-8,
-            #     verbose=frozenset({"step", "loss"}),
-            # )
 
             sol = optx.minimise(mse_wrapper, solver, opt_params, args=(y0s, values), max_steps=max_steps, throw=False)
 
