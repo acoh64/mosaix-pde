@@ -1,5 +1,6 @@
 import gymnasium as gym
 from gymnasium import spaces
+from gymnasium.envs.registration import register
 import numpy as np
 import jax.numpy as jnp
 import diffrax
@@ -11,6 +12,12 @@ from .numerics import domains
 from .utils import check_equation_solver_compatibility, prepare_solver_params
 
 # TODO: create RL environments that can control multiple parameters at once.
+
+# Register the environment with gymnasium
+register(
+    id='PDEEnv-v0',
+    entry_point='pde_opt.pde_env:PDEEnv',
+)
 
 
 class PDEEnv(gym.Env):

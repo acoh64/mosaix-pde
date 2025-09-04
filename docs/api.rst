@@ -1,8 +1,5 @@
-API Reference
-=============
+The pde_opt API reference
+================================================
 
-.. autosummary::
-   :toctree: _autosummary
-   :recursive:
-
-   pde_opt
+.. automodule:: pde_opt
+   :members:

@@ -13,10 +13,12 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath('..'))
+sys.path.append(os.path.abspath('../pde_opt'))
+
 
 # -- Project information -----------------------------------------------------
 
-project = 'pde-opt'
+project = 'pde_opt'
 copyright = '2025, Alexander E Cohen'
 author = 'Alexander E Cohen'
 
@@ -98,7 +100,7 @@ html_favicon = 'cool_smile.png'
 # GitHub integration
 html_context = {
     "display_github": True,
-    "github_user": "aecohen",  # Update with your GitHub username
+    "github_user": "acoh64",  # Update with your GitHub username
     "github_repo": "pde-opt",  # Update with your repository name
     "github_version": "main",
     "conf_py_path": "/docs/",
