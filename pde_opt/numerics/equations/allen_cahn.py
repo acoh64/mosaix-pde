@@ -41,7 +41,8 @@ class AllenCahn2DPeriodic(BaseEquation):
 
     domain: Domain  # The computational domain for the equation
     """Test docstring"""
-    
+    # TODO: make all docstrings like this
+
     kappa: float
     mu: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
     R: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
