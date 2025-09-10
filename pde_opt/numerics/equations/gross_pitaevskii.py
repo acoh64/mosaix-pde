@@ -1,3 +1,7 @@
+"""
+This module contains various Gross-Pitaevskii equation classes.
+"""
+
 import dataclasses
 from typing import Callable
 
@@ -13,11 +17,31 @@ a0 = 5.29177210903e-11 # Bohr radius
 
 @dataclasses.dataclass
 class GPE2DTSControl(TimeSplittingEquation):
-    domain: Domain
+    """Gross-Pitaevskii equation in 2D with time-splitting and control.
+
+    The Gross-Pitaevskii equation describes the dynamics of Bose-Einstein condensates.
+    The equation is:
+
+    .. math::
+        i\\hbar \\frac{\\partial \\psi}{\\partial t} = \\left[-\\frac{\\hbar^2}{2m}\\nabla^2 + V(\\mathbf{r}, t) + g|\\psi|^2\\right]\\psi
+
+    where ψ is the wave function, V is the external potential, and g is the interaction strength.
+    The external potential includes a harmonic trap and control field:
+
+    .. math::
+        V(\\mathbf{r}, t) = \\frac{1}{2}m\\omega^2\\left[(1+\\epsilon)x^2 + (1-\\epsilon)y^2\\right] + V_{control}(\\mathbf{r}, t)
+    """
+
+    domain: Domain  # The computational domain for the equation
+    """Domain of the equation"""
     k: float
+    """Interaction strength parameter"""
     e: float
+    """Trap ellipticity parameter"""
     lights: Callable
+    """Function for the control field"""
     trap_factor: float = 1.0
+    """Scaling factor for the harmonic trap"""
     fft = None
     ifft = None
     A_term = None
@@ -59,11 +83,30 @@ class GPE2DTSControl(TimeSplittingEquation):
 
 @dataclasses.dataclass
 class GPE2DTSRot(TimeSplittingEquation):
-    # TODO: need to fix this
-    domain: Domain
+    """Gross-Pitaevskii equation in 2D with time-splitting and rotation.
+
+    The Gross-Pitaevskii equation describes the dynamics of Bose-Einstein condensates.
+    The equation is:
+
+    .. math::
+        i\\hbar \\frac{\\partial \\psi}{\\partial t} = \\left[-\\frac{\\hbar^2}{2m}\\nabla^2 + V(\\mathbf{r}) + g|\\psi|^2 - \\Omega L_z\\right]\\psi
+
+    where ψ is the wave function, V is the external potential, g is the interaction strength,
+    and Ω is the rotation frequency with L_z being the angular momentum operator.
+    The external potential includes a harmonic trap:
+
+    .. math::
+        V(\\mathbf{r}) = \\frac{1}{2}m\\omega^2\\left[(1+\\epsilon)x^2 + (1-\\epsilon)y^2\\right]
+    """
+
+    domain: Domain  # The computational domain for the equation
+    """Domain of the equation"""
     k: float
+    """Interaction strength parameter"""
     e: float
+    """Trap ellipticity parameter"""
     omega: float
+    """Rotation frequency"""
     
     def __post_init__(self):
         self.kx, self.ky = self.domain.fft_mesh()

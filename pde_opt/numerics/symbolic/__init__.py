@@ -1,0 +1,1 @@
+"""This module contains symbolic equation classes for the PDEs for testing purposes."""

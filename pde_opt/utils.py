@@ -1,3 +1,8 @@
+"""
+This module contains general utility functions.
+"""
+
+
 def check_equation_solver_compatibility(solver_type, equation_type):
     """Check that equation type has all required attributes specified by solver.
 

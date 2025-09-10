@@ -1,4 +1,7 @@
-# symbolic/cahn_hilliard_sym.py
+"""
+This module contains a symbolic equation class for the Cahn-Hilliard equation.
+"""
+
 from dataclasses import dataclass
 from typing import Callable
 import numpy as np
@@ -10,15 +13,7 @@ from .base_sym_eq import BaseSymbolicEquation
 
 @dataclass
 class SymbolicCahnHilliard2DPeriodic(BaseSymbolicEquation):
-    """Build exact RHS for Cahn–Hilliard equation, used only in tests.
-    
-    Args:
-        domain: Domain of the equation
-        kappa: Parameter of the equation
-        mu_sym: Symbolic chemical potential
-        D_sym: Symbolic mobility
-        u_star: Test solution for the equation
-    """
+    """Build exact RHS for Cahn–Hilliard equation, used only in tests."""
 
     domain: object
     kappa: float

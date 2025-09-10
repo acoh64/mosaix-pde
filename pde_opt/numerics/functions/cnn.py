@@ -1,3 +1,6 @@
+"""
+This module contains a periodic CNN class for representing functions in PDEs.
+"""
 
 from typing import Callable, Sequence, Tuple, Union
 import jax

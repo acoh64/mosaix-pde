@@ -1,3 +1,7 @@
+"""
+This module contains the Shape class, which is used to set up a geometry/shape for solving PDE on with smoothed boundary method.
+"""
+
 import dataclasses
 
 import jax

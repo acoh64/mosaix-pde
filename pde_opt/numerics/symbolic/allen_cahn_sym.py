@@ -1,4 +1,7 @@
-# symbolic/cahn_hilliard_sym.py
+"""
+This module contains a symbolic equation class for the Allen-Cahn equation.
+"""
+
 from dataclasses import dataclass
 from typing import Callable
 import numpy as np
@@ -8,15 +11,7 @@ import jax.numpy as jnp  # only to return jnp arrays if you like; optional
 
 @dataclass
 class SymbolicAllenCahn2DPeriodic:
-    """Build exact RHS for Allen–Cahn equation, used only in tests.
-    
-    Args:
-        domain: Domain of the equation
-        kappa: Parameter of the equation
-        mu_sym: Symbolic chemical potential
-        R_sym: Symbolic reaction term
-        u_star: Test solution for the equation
-    """
+    """Build exact RHS for Allen–Cahn equation, used only in tests."""
 
     domain: object
     kappa: float

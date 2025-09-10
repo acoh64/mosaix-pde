@@ -6,6 +6,7 @@ equation classes defined in the numerics.equations module.
 
 Available Solvers:
     SemiImplicitFourierSpectral: Semi-implicit Fourier spectral method.
+    
     StrangSplitting: Strang splitting method for equations with separable operators
         (e.g., Gross-Pitaevskii equation).
 

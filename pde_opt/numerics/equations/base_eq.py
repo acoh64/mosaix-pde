@@ -1,3 +1,7 @@
+"""
+This module contains the base equation classes for the PDEs.
+"""
+
 from abc import ABC, abstractmethod
 from typing import TypeVar
 

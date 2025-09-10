@@ -1,3 +1,9 @@
+"""
+This module contains a Mixer MLP architecture for representing functions in PDEs.
+
+Based on the code from https://docs.kidger.site/equinox/examples/score_based_diffusion/
+"""
+
 import equinox as eqx
 import jax
 import jax.numpy as jnp

@@ -1,3 +1,8 @@
+"""
+This module contains various Allen-Cahn equation classes.
+"""
+
+
 import dataclasses
 from typing import Callable, Union
 import jax
@@ -24,30 +29,18 @@ class AllenCahn2DPeriodic(BaseEquation):
 
     .. math::
         \\mu = \\mu_h(u) - \\kappa \\nabla^2 u
-
-    Parameters
-    ----------
-    domain : Domain
-        The computational domain for the equation
-    kappa : float
-        Gradient energy coefficient (positive parameter)
-    mu : Callable or eqx.Module
-        Function for the chemical potential μ_h(u)
-    R : Callable or eqx.Module  
-        Function for the reaction term R(u)
-    derivs : str, default "fourier"
-        Type of derivative computation: "fourier" or "fd"
     """
 
     domain: Domain  # The computational domain for the equation
-    """Test docstring"""
-    # TODO: make all docstrings like this
-
+    """Domain of the equation"""
     kappa: float
+    """Gradient energy coefficient"""
     mu: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
+    """Function for the chemical potential"""
     R: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
-    derivs: str = "fourier"
-    # TODO: add smoothing for fft (aliasing)
+    """Function for the reaction term"""
+    derivs: str = "fd"
+    """Type of derivative computation"""
 
     def rhs(self, state, t):
         raise NotImplementedError("rhs method not implemented")
@@ -70,39 +63,11 @@ class AllenCahn2DPeriodic(BaseEquation):
             raise ValueError(f"Invalid derivative type: {self.derivs}")
 
     def rhs_fourier(self, state, t):
-        """Compute RHS using Fourier spectral method.
-        
-        Parameters
-        ----------
-        state : jax.Array
-            Current state u(x,y)
-        t : float
-            Current time
-            
-        Returns
-        -------
-        jax.Array
-            Right-hand side of the Allen-Cahn equation
-        """
         state_hat = self.fft(state)
         mu = self.ifft(self.fft(self.mu(state)) - self.kappa * (self.two_pi_i_k_2) * state_hat).real
         return -self.R(state) * mu
 
     def rhs_fd(self, state, t):
-        """Compute RHS using finite difference method.
-        
-        Parameters
-        ----------
-        state : jax.Array
-            Current state u(x,y)
-        t : float
-            Current time
-            
-        Returns
-        -------
-        jax.Array
-            Right-hand side of the Allen-Cahn equation
-        """
         hx, hy = self.domain.dx
         mu = self.mu(state) - self.kappa * _lap_2nd_2D(state, hx, hy)
         return -self.R(state) * mu
@@ -125,38 +90,22 @@ class AllenCahn2DSmoothedBoundary(BaseEquation):
     .. math::
         \\mu = \\mu_h(u) - \\frac{\\kappa}{\\psi} \\nabla \\cdot (\\psi \\nabla u) 
         - \\sqrt{\\kappa} \\frac{|\\nabla \\psi|}{\\psi} \\sqrt{2f} \\cos(\\theta)
-
-    Parameters
-    ----------
-    domain : Domain
-        The computational domain with geometry information
-    kappa : float
-        Gradient energy coefficient
-    f : Callable or eqx.Module
-        Free energy density function
-    mu : Callable or eqx.Module
-        Chemical potential function μ_h(u)
-    R : Callable or eqx.Module
-        Reaction term function R(u)
-    theta : Callable or eqx.Module
-        Contact angle function θ(t)
-    derivs : str, default "fd"
-        Derivative method (only "fd" supported)
-        
-    Notes
-    -----
-    - Uses smoothed boundary method for complex geometries
-    - ψ is the smooth level-set function (1 inside domain, 0 outside)
-    - Includes contact angle effects at boundaries
     """
 
     domain: Domain
+    """Domain of the equation"""
     kappa: float
+    """Gradient energy coefficient"""
     f: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
+    """Function for the free energy density"""
     mu: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
+    """Function for the chemical potential"""
     R: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
+    """Function for the reaction term"""
     theta: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
+    """Function for the contact angle"""
     derivs: str = "fd"
+    """Type of derivative computation"""
 
     def rhs(self, state, t):
         raise NotImplementedError("rhs method not implemented")
@@ -179,8 +128,6 @@ class AllenCahn2DSmoothedBoundary(BaseEquation):
             raise ValueError(f"Invalid derivative type: {self.derivs}")
 
     def rhs_fd(self, state, t):
-        """2nd-order finite difference RHS for Allen–Cahn with smoothed boundary"""
-
         f = self.f(state)
         mu = self.mu(state)
         mask_avgx = _avgx_c2f(self.psi)

@@ -1,3 +1,7 @@
+"""
+This module contains the Legendre polynomial expansion class for representing functions in PDEs.
+"""
+
 import equinox as eqx
 import jax
 import jax.numpy as jnp
@@ -5,6 +9,7 @@ from typing import Callable
 import dataclasses
 
 class LegendrePolynomialExpansion(eqx.Module):
+    """Legendre polynomial expansion."""
     params: jax.Array  # shape (max_degree+1,)
     max_degree: int
 
@@ -27,6 +32,10 @@ class LegendrePolynomialExpansion(eqx.Module):
         return result
 
 class DiffusionLegendrePolynomials(eqx.Module):
+    """Diffusion Legendre polynomials.
+    
+    Uses exp to ensure positivity.
+    """
     expansion: LegendrePolynomialExpansion
 
     def __init__(self, params: jax.Array):
@@ -40,6 +49,7 @@ class DiffusionLegendrePolynomials(eqx.Module):
         return jnp.exp(self.expansion(scaled_inputs))
 
 class ChemicalPotentialLegendrePolynomials(eqx.Module):
+    """Chemical potential Legendre polynomials."""
     expansion: LegendrePolynomialExpansion
     prior_fn: Callable 
 

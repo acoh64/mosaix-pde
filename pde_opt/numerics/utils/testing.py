@@ -1,3 +1,8 @@
+"""
+This module contains helper functions for testing the PDEs.
+"""
+
+
 import numpy as np
 import matplotlib.pyplot as plt
 from typing import Type

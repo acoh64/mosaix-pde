@@ -31,62 +31,7 @@ class PDEModel:
             integration. Must be a subclass of dfx.AbstractSolver and can be existing 
             diffrax solvers like Tsit5 or custom solvers like defined in numerics.solvers.
 
-    Example:
-        Basic usage for solving a PDE:
-        ```python
-        import jax.numpy as jnp
-        from pde_opt import PDEModel
-        from pde_opt.numerics.equations import AllenCahn2DPeriodic
-        from pde_opt.numerics import domains
-        import diffrax as dfx
-
-        # Create domain
-        domain = domains.Domain(
-            points=(64, 64),
-            box=((-1, 1), (-1, 1)),
-            units="dimensionless"
-        )
-
-        # Create model
-        model = PDEModel(
-            equation_type=AllenCahn2DPeriodic,
-            domain=domain,
-            solver_type=dfx.Tsit5
-        )
-
-        # Define parameters and initial condition
-        parameters = {"kappa": 0.1, "mu": lambda u: u**3 - u, "R": lambda u: 1.0}
-        y0 = jnp.ones((64, 64)) * 0.5
-        ts = jnp.linspace(0, 1, 11)
-
-        # Solve the PDE
-        solution = model.solve(parameters, y0, ts)
-        ```
-
-    Example:
-        Parameter optimization:
-        ```python
-        # Prepare training data
-        data = {"ys": [y0, y1, y2, ...], "ts": [0, 0.1, 0.2, ...]}
-        inds = [[0, 1, 2], [0, 1, 2]]  # Training trajectories
-
-        # Define parameters to optimize
-        opt_parameters = {"kappa": jnp.array(0.1)}
-        other_parameters = {"mu": lambda u: u**3 - u, "R": lambda u: 1.0}
-
-        # Train the model
-        optimized_params = model.train(
-            data=data,
-            inds=inds,
-            opt_parameters=opt_parameters,
-            other_parameters=other_parameters,
-            solver_parameters={},
-            weights={"kappa": jnp.ones_like(opt_parameters["kappa"])},
-            lambda_reg=1e-4,
-            method="least_squares",
-            max_steps=100
-        )
-        ```
+    For examples, see the documentation notebooks.
     """
 
     def __init__(
@@ -159,29 +104,6 @@ class PDEModel:
 
         Returns:
             Solution array with shape (len(ts), *y0.shape). 
-
-        Example:
-            ```python
-            # Solve Allen-Cahn equation
-            parameters = {
-                "kappa": 0.1,
-                "mu": lambda u: u**3 - u,
-                "R": lambda u: 1.0
-            }
-            y0 = jnp.ones((64, 64)) * 0.5
-            ts = jnp.linspace(0, 1, 11)
-            
-            solution = model.solve(
-                parameters=parameters,
-                y0=y0,
-                ts=ts,
-                solver_parameters={},
-                adjoint=dfx.ForwardMode(),
-                dt0=1e-4,
-                max_steps=10000
-            )
-            # solution.shape = (11, 64, 64)
-            ```
         """
 
         # Initialize the equation with the given parameters
@@ -256,7 +178,8 @@ class PDEModel:
         prevent overfitting and improve parameter stability during optimization. The
         regularization is computed as:
 
-            reg = λ * Σ(w_i * p_i²)
+        .. math::
+            \\text{reg} = \\lambda \\sum_i w_i p_i^2
 
         where λ is the regularization coefficient, w_i are the weights, and p_i are
         the parameter values.
@@ -361,7 +284,9 @@ class PDEModel:
         for the "mse" optimization method in the train() method.
 
         The loss function is:
-            MSE = mean((predicted - observed)²) + λ * regularization
+
+        .. math::
+            \\text{MSE} = \\text{mean}((\\text{predicted} - \\text{observed})^2) + \\lambda \\cdot \\text{regularization}
 
         Args:
             parameters (Dict[str, Any]): Current parameter values for the equation.
@@ -442,52 +367,6 @@ class PDEModel:
             Dict[str, Any]: Optimized parameters combined with fixed parameters.
             The returned dictionary contains both the optimized parameters and the
             other_parameters, ready for use in the solve() method.
-
-        Example:
-            ```python
-            # Prepare training data
-            data = {
-                "ys": [y0, y1, y2, y3, y4],  # Solution snapshots
-                "ts": [0, 0.1, 0.2, 0.3, 0.4]  # Time points
-            }
-            
-            # Define training trajectories (using first 3 time points)
-            inds = [[0, 1, 2], [0, 1, 2]]  # Two identical trajectories
-            
-            # Parameters to optimize (must be JAX arrays)
-            opt_parameters = {
-                "kappa": jnp.array(0.1),
-                "diffusion": jnp.array(0.05)
-            }
-            
-            # Fixed parameters
-            other_parameters = {
-                "mu": lambda u: u**3 - u,
-                "R": lambda u: 1.0
-            }
-            
-            # Regularization weights
-            weights = {
-                "kappa": jnp.ones_like(opt_parameters["kappa"]),
-                "diffusion": jnp.ones_like(opt_parameters["diffusion"])
-            }
-            
-            # Train the model
-            optimized_params = model.train(
-                data=data,
-                inds=inds,
-                opt_parameters=opt_parameters,
-                other_parameters=other_parameters,
-                solver_parameters={},
-                weights=weights,
-                lambda_reg=1e-4,
-                method="least_squares",
-                max_steps=100
-            )
-            
-            # Use optimized parameters for prediction
-            solution = model.solve(optimized_params, y0, ts)
-            ```
         """
 
         # TODO: might need to make it so all parameters you want to optimize are jax arrays

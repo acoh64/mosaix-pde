@@ -1,3 +1,7 @@
+"""
+This module contains the initialization functions for the PDEs.
+"""
+
 import jax.numpy as jnp
 import numpy as np
 

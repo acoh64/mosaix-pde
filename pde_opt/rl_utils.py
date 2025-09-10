@@ -1,3 +1,7 @@
+"""
+This module contains utility functions for the RL environments.
+"""
+
 import jax.numpy as jnp
 
 _TWO_PI = 2.0 * jnp.pi

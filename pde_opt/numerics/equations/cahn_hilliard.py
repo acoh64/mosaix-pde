@@ -1,3 +1,7 @@
+"""
+This module contains various Cahn-Hilliard equation classes.
+"""
+
 import dataclasses
 from typing import Callable, Union
 import jax
@@ -28,25 +32,29 @@ from ..utils.derivatives import (
 class CahnHilliard2DPeriodic(BaseEquation):
     """Cahn–Hilliard equation in 2D with periodic boundary conditions.
 
-    The equation is of the form
+    The Cahn-Hilliard equation describes phase separation and coarsening dynamics.
+    The equation is:
 
-        d/dt u = ∇·( D(u) ∇μ ),   μ = μ_h(u) - κ Δu,
+    .. math::
+        \\frac{\\partial u}{\\partial t} = \\nabla \\cdot (D(u) \\nabla \\mu)
 
-    where u is the concentration, D(u) is the mobility, μ is the chemical potential, and κ is a parameter (the gradient energy coefficient).
+    where u is the concentration, D(u) is the mobility, and μ is the chemical potential.
+    The chemical potential is given by:
 
-    Args:
-        domain: Domain of the equation
-        kappa: Parameter of the equation
-        mu: Function for the chemical potential
-        D: Function for the mobility
-        derivs: Type of derivative to use, "fourier" or "fd"
+    .. math::
+        \\mu = \\mu_h(u) - \\kappa \\nabla^2 u
     """
 
-    domain: Domain
+    domain: Domain  # The computational domain for the equation
+    """Domain of the equation"""
     kappa: float
+    """Gradient energy coefficient"""
     mu: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
+    """Function for the chemical potential"""
     D: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
+    """Function for the mobility"""
     derivs: str = "fd"
+    """Type of derivative computation"""
     fft = None
     ifft = None
     fourier_symbol = None
@@ -73,8 +81,6 @@ class CahnHilliard2DPeriodic(BaseEquation):
             raise ValueError(f"Invalid derivative type: {self.derivs}")
 
     def rhs_fourier(self, state, t):
-        """RHS of the Cahn–Hilliard equation, with derivatives in Fourier space"""
-
         state_hat = self.fft(state)
         tmp = self.fft(self.mu(state)) - self.kappa * (self.two_pi_i_k_2) * state_hat
         tmpx = self.fft(self.D(state) * self.ifft(self.two_pi_i_kx * tmp))
@@ -82,8 +88,6 @@ class CahnHilliard2DPeriodic(BaseEquation):
         return self.ifft(self.two_pi_i_kx * tmpx + self.two_pi_i_ky * tmpy).real
 
     def rhs_fd(self, state, t):
-        """2nd-order finite difference RHS for Cahn–Hilliard with periodic BCs"""
-
         hx, hy = self.domain.dx
 
         # chemical potential: μ = μ_nl(u) - κ Δu
@@ -110,29 +114,32 @@ class CahnHilliard2DPeriodic(BaseEquation):
 class CahnHilliard3DPeriodic(BaseEquation):
     """Cahn–Hilliard equation in 3D with periodic boundary conditions.
 
-    The equation is of the form
+    The Cahn-Hilliard equation describes phase separation and coarsening dynamics.
+    The equation is:
 
-        d/dt u = ∇·( D(u) ∇μ ),   μ = μ_h(u) - κ Δu,
+    .. math::
+        \\frac{\\partial u}{\\partial t} = \\nabla \\cdot (D(u) \\nabla \\mu)
 
-    where u is the concentration, D(u) is the mobility, μ is the chemical potential, and κ is a parameter (the gradient energy coefficient).
+    where u is the concentration, D(u) is the mobility, and μ is the chemical potential.
+    The chemical potential is given by:
 
-    Args:
-        domain: Domain of the equation
-        kappa: Parameter of the equation
-        mu: Function for the chemical potential
-        D: Function for the mobility
-        derivs: Type of derivative to use, "fourier" or "fd"
+    .. math::
+        \\mu = \\mu_h(u) - \\kappa \\nabla^2 u
     """
 
-    domain: Domain
+    domain: Domain  # The computational domain for the equation
+    """Domain of the equation"""
     kappa: float
+    """Gradient energy coefficient"""
     mu: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
+    """Function for the chemical potential"""
     D: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
+    """Function for the mobility"""
     derivs: str = "fd"
+    """Type of derivative computation"""
     fft = None
     ifft = None
     fourier_symbol = None
-    # TODO: add smoothing for fft (aliasing)
 
     def rhs(self, state, t):
         raise NotImplementedError("rhs method not implemented")
@@ -159,8 +166,6 @@ class CahnHilliard3DPeriodic(BaseEquation):
             raise ValueError(f"Invalid derivative type: {self.derivs}")
 
     def rhs_fourier(self, state, t):
-        """RHS of the Cahn–Hilliard equation, with derivatives in Fourier space"""
-
         state_hat = self.fft(state)
         tmp = self.fft(self.mu(state)) - self.kappa * (self.two_pi_i_k_2) * state_hat
         tmpx = self.fft(self.D(state) * self.ifft(self.two_pi_i_kx * tmp))
@@ -171,8 +176,6 @@ class CahnHilliard3DPeriodic(BaseEquation):
         ).real
 
     def rhs_fd(self, state, t):
-        """2nd-order finite difference RHS for Cahn–Hilliard with periodic BCs"""
-
         hx, hy, hz = self.domain.dx
 
         # chemical potential: μ = μ_nl(u) - κ Δu
@@ -200,33 +203,40 @@ class CahnHilliard3DPeriodic(BaseEquation):
 
 @dataclasses.dataclass
 class CahnHilliard2DSmoothedBoundary(BaseEquation):
-    """Cahn–Hilliard equation in 2D solved with the smoothed boundary method for arbitrary boundaries.
+    """Cahn–Hilliard equation with smoothed boundary method for arbitrary geometries.
 
-    The equation is of the form
+    This class implements the Cahn-Hilliard equation using the smoothed boundary
+    method, which allows for complex domain geometries through a smooth
+    level-set function ψ.
 
-        d/dt u = 1/ψ ∇·( ψ D(u) ∇μ ) + |∇ψ|/ψ J_n,   μ = μ_h(u) - κ/ψ ∇·(ψ ∇u) - sqrt(κ) |∇ψ|/ψ sqrt(2f) cos(θ),
+    The equation is:
 
-    where u is the concentration, D(u) is the mobility, μ is the chemical potential, κ is a parameter (the gradient energy coefficient), ψ is a smooth function that is 1 inside the domain and 0 outside, and J_n is the normal flux, f is the free energy density, and θ is the contact angle between the phase boundary and the interface.
+    .. math::
+        \\frac{\\partial u}{\\partial t} = \\frac{1}{\\psi} \\nabla \\cdot (\\psi D(u) \\nabla \\mu) + \\frac{|\\nabla \\psi|}{\\psi} J_n
 
-    Args:
-        domain: Domain of the equation
-        kappa: Parameter of the equation
-        f: Function for the free energy density
-        mu: Function for the chemical potential
-        D: Function for the mobility
-        theta: Function for the contact angle
-        flux: Function for the normal flux
-        derivs: Type of derivative to use, "fd"
+    where the chemical potential includes boundary effects:
+
+    .. math::
+        \\mu = \\mu_h(u) - \\frac{\\kappa}{\\psi} \\nabla \\cdot (\\psi \\nabla u) 
+        - \\sqrt{\\kappa} \\frac{|\\nabla \\psi|}{\\psi} \\sqrt{2f} \\cos(\\theta)
     """
 
     domain: Domain
+    """Domain of the equation"""
     kappa: float
+    """Gradient energy coefficient"""
     f: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
+    """Function for the free energy density"""
     mu: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
+    """Function for the chemical potential"""
     D: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
+    """Function for the mobility"""
     theta: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
+    """Function for the contact angle"""
     flux: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
+    """Function for the normal flux"""
     derivs: str = "fd"
+    """Type of derivative computation"""
 
     def rhs(self, state, t):
         raise NotImplementedError("rhs method not implemented")
@@ -249,8 +259,6 @@ class CahnHilliard2DSmoothedBoundary(BaseEquation):
             raise ValueError(f"Invalid derivative type: {self.derivs}")
 
     def rhs_fd(self, state, t):
-        """2nd-order finite difference RHS for Cahn–Hilliard with smoothed boundary"""
-
         f = self.f(state)
         mu = self.mu(state)
         mask_avgx = _avgx_c2f(self.psi)

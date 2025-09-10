@@ -1,3 +1,7 @@
+"""
+This module contains the Domain class, which is used to set up a simulation domain for the model.
+"""
+
 import dataclasses
 from typing import Optional, Tuple
 import jax
