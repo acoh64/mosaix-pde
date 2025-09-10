@@ -11,6 +11,7 @@ import jax.numpy as jnp  # only to return jnp arrays if you like; optional
 
 from .base_sym_eq import BaseSymbolicEquation
 
+
 @dataclass
 class SymbolicCahnHilliard2DPeriodic(BaseSymbolicEquation):
     """Build exact RHS for Cahn–Hilliard equation, used only in tests."""
@@ -18,15 +19,15 @@ class SymbolicCahnHilliard2DPeriodic(BaseSymbolicEquation):
     domain: object
     kappa: float
     mu_sym: Callable[[sp.Expr], sp.Expr]  # e.g., lambda u: u**3 - u
-    D_sym:  Callable[[sp.Expr], sp.Expr]  # e.g., lambda u: 1
-    u_star: sp.Expr                         # test solution u*(x,y,t)
+    D_sym: Callable[[sp.Expr], sp.Expr]  # e.g., lambda u: 1
+    u_star: sp.Expr  # test solution u*(x,y,t)
 
     def __post_init__(self):
-        x, y, t = sp.symbols('x y t', real=True)
+        x, y, t = sp.symbols("x y t", real=True)
         u = self.u_star
 
-        u_x  = sp.diff(u, x)
-        u_y  = sp.diff(u, y)
+        u_x = sp.diff(u, x)
+        u_y = sp.diff(u, y)
         u_xx = sp.diff(u, x, 2)
         u_yy = sp.diff(u, y, 2)
 
@@ -35,8 +36,8 @@ class SymbolicCahnHilliard2DPeriodic(BaseSymbolicEquation):
         rhs_expr = sp.diff(self.D_sym(u) * mu_x, x) + sp.diff(self.D_sym(u) * mu_y, y)
 
         # Cache fast array-callables
-        self._u_fn   = lambdify((x, y, t), sp.simplify(u),        'numpy')
-        self._rhs_fn = lambdify((x, y, t), sp.simplify(rhs_expr), 'numpy')
+        self._u_fn = lambdify((x, y, t), sp.simplify(u), "numpy")
+        self._rhs_fn = lambdify((x, y, t), sp.simplify(rhs_expr), "numpy")
 
     # ---- Public evaluators for tests ----
     def u_exact(self, t: float):

@@ -217,7 +217,7 @@ class CahnHilliard2DSmoothedBoundary(BaseEquation):
     where the chemical potential includes boundary effects:
 
     .. math::
-        \\mu = \\mu_h(u) - \\frac{\\kappa}{\\psi} \\nabla \\cdot (\\psi \\nabla u) 
+        \\mu = \\mu_h(u) - \\frac{\\kappa}{\\psi} \\nabla \\cdot (\\psi \\nabla u)
         - \\sqrt{\\kappa} \\frac{|\\nabla \\psi|}{\\psi} \\sqrt{2f} \\cos(\\theta)
     """
 

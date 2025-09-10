@@ -9,9 +9,9 @@ from .legendre import (
 from .mixer_mlp import Mixer2d
 
 __all__ = [
-    'PeriodicCNN',
-    'LegendrePolynomialExpansion',
-    'DiffusionLegendrePolynomials',
-    'ChemicalPotentialLegendrePolynomials',
-    'Mixer2d',
+    "PeriodicCNN",
+    "LegendrePolynomialExpansion",
+    "DiffusionLegendrePolynomials",
+    "ChemicalPotentialLegendrePolynomials",
+    "Mixer2d",
 ]

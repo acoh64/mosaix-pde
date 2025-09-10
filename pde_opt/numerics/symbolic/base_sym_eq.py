@@ -15,9 +15,8 @@ class BaseSymbolicEquation(ABC):
     def u_exact(self, t: float) -> State:
         """Exact solution for the equation"""
         raise NotImplementedError
-    
+
     @abstractmethod
     def rhs_exact(self, t: float) -> State:
         """Exact RHS for the equation"""
         raise NotImplementedError
-    

@@ -8,8 +8,10 @@ import jax.numpy as jnp
 from typing import Callable
 import dataclasses
 
+
 class LegendrePolynomialExpansion(eqx.Module):
     """Legendre polynomial expansion."""
+
     params: jax.Array  # shape (max_degree+1,)
     max_degree: int
 
@@ -31,11 +33,13 @@ class LegendrePolynomialExpansion(eqx.Module):
             p_prev, p_curr = p_curr, p_next
         return result
 
+
 class DiffusionLegendrePolynomials(eqx.Module):
     """Diffusion Legendre polynomials.
-    
+
     Uses exp to ensure positivity.
     """
+
     expansion: LegendrePolynomialExpansion
 
     def __init__(self, params: jax.Array):
@@ -48,10 +52,12 @@ class DiffusionLegendrePolynomials(eqx.Module):
         scaled_inputs = 2.0 * inputs - 1.0
         return jnp.exp(self.expansion(scaled_inputs))
 
+
 class ChemicalPotentialLegendrePolynomials(eqx.Module):
     """Chemical potential Legendre polynomials."""
+
     expansion: LegendrePolynomialExpansion
-    prior_fn: Callable 
+    prior_fn: Callable
 
     def __init__(self, params: jax.Array, prior_fn: Callable = None):
         super().__init__()
@@ -66,9 +72,6 @@ class ChemicalPotentialLegendrePolynomials(eqx.Module):
         if self.prior_fn is not None:
             result += self.prior_fn(inputs)
         return result
-    
-
-
 
 
 @dataclasses.dataclass

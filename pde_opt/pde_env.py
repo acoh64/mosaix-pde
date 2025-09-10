@@ -15,8 +15,8 @@ from .utils import check_equation_solver_compatibility, prepare_solver_params
 
 # Register the environment with gymnasium
 register(
-    id='PDEEnv-v0',
-    entry_point='pde_opt.pde_env:PDEEnv',
+    id="PDEEnv-v0",
+    entry_point="pde_opt.pde_env:PDEEnv",
 )
 
 
@@ -273,9 +273,7 @@ class PDEEnv(gym.Env):
         )
 
         old_control_value = self._control_value
-        self._control_value = self.update_control_value(
-            offset, old_control_value
-        ) 
+        self._control_value = self.update_control_value(offset, old_control_value)
 
         control_parameter = self.update_control_parameter(
             old_control_value, self._control_value

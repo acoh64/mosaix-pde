@@ -10,8 +10,10 @@ import equinox.nn as nn
 
 Array = jax.Array
 
+
 class PeriodicConvBlock(eqx.Module):
     """Conv2d -> activation with periodic padding. Translation-equivariant."""
+
     conv: nn.Conv2d
     act: Callable[[Array], Array]
 
@@ -31,8 +33,8 @@ class PeriodicConvBlock(eqx.Module):
             out_channels=out_channels,
             kernel_size=kernel_size,
             stride=(1, 1),
-            padding="SAME",          # keeps spatial dims equal to input
-            padding_mode="CIRCULAR", # periodic wrap-around padding
+            padding="SAME",  # keeps spatial dims equal to input
+            padding_mode="CIRCULAR",  # periodic wrap-around padding
             use_bias=True,
             key=key,
         )
@@ -44,10 +46,11 @@ class PeriodicConvBlock(eqx.Module):
 
 class PeriodicCNN(eqx.Module):
     """Stack of periodic conv blocks; final conv returns requested channels.
-    
+
     Translation-equivariant on a torus so long as stride=1 and only pointwise
     nonlinearities are used. Accepts (C,H,W) or (B,C,H,W); returns same spatial size.
     """
+
     layers: Tuple[eqx.Module, ...]  # blocks + final conv (no activation)
 
     def __init__(
@@ -98,4 +101,3 @@ class PeriodicCNN(eqx.Module):
 
     def __call__(self, x: Array) -> Array:
         return self._forward_single(x[None])[0]
-        

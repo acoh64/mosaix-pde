@@ -10,6 +10,7 @@ import jax.numpy as jnp
 import jax.random as jr
 import einops
 
+
 class MixerBlock(eqx.Module):
     patch_mixer: eqx.nn.MLP
     hidden_mixer: eqx.nn.MLP

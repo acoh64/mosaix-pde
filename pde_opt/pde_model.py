@@ -28,7 +28,7 @@ class PDEModel:
         domain (domains.Domain): The spatial domain for solving the equation. Contains
             grid information, boundary conditions, and coordinate systems.
         solver_type (Type[dfx.AbstractSolver]): The numerical solver class for time
-            integration. Must be a subclass of dfx.AbstractSolver and can be existing 
+            integration. Must be a subclass of dfx.AbstractSolver and can be existing
             diffrax solvers like Tsit5 or custom solvers like defined in numerics.solvers.
 
     For examples, see the documentation notebooks.
@@ -49,7 +49,7 @@ class PDEModel:
                 resolution, spatial bounds, and coordinate system.
             solver_type (Type[dfx.AbstractSolver]): The numerical solver for time
                 integration. Must be a subclass of dfx.AbstractSolver and can be existing diffrax solvers like Tsit5 or custom solvers like
-                defined in numerics.solvers.    
+                defined in numerics.solvers.
 
         Raises:
             ValueError: If the equation and solver are incompatible (e.g., solver
@@ -103,20 +103,24 @@ class PDEModel:
                 for adaptive step sizing. Defaults to ConstantStepSize().
 
         Returns:
-            Solution array with shape (len(ts), *y0.shape). 
+            Solution array with shape (len(ts), *y0.shape).
         """
 
         # Initialize the equation with the given parameters
         equation = self.equation_type(domain=self.domain, **parameters)
 
-        full_solver_params = prepare_solver_params(self.solver_type, solver_parameters, equation)
+        full_solver_params = prepare_solver_params(
+            self.solver_type, solver_parameters, equation
+        )
 
         # Initialize the solver with solver_parameters and equation attributes
         solver = self.solver_type(**full_solver_params)
 
         # Solve with diffrax
         solution = dfx.diffeqsolve(
-            dfx.ODETerm(jax.jit(lambda t, y, args: equation.rhs(y, t))), # TODO: might need to remove jit or change to filter_jit
+            dfx.ODETerm(
+                jax.jit(lambda t, y, args: equation.rhs(y, t))
+            ),  # TODO: might need to remove jit or change to filter_jit
             solver,
             t0=ts[0],
             t1=ts[-1],
@@ -410,7 +414,12 @@ class PDEModel:
             )
 
             sol = optx.least_squares(
-                residuals_wrapper, solver, opt_params, args=(y0s, values), max_steps=max_steps, throw=False
+                residuals_wrapper,
+                solver,
+                opt_params,
+                args=(y0s, values),
+                max_steps=max_steps,
+                throw=False,
             )
 
             res = eqx.combine(sol.value, opt_params_static)
@@ -437,7 +446,14 @@ class PDEModel:
                 verbose=frozenset({"step", "accepted", "loss", "step_size"}),
             )
 
-            sol = optx.minimise(mse_wrapper, solver, opt_params, args=(y0s, values), max_steps=max_steps, throw=False)
+            sol = optx.minimise(
+                mse_wrapper,
+                solver,
+                opt_params,
+                args=(y0s, values),
+                max_steps=max_steps,
+                throw=False,
+            )
 
             res = eqx.combine(sol.value, opt_params_static)
 

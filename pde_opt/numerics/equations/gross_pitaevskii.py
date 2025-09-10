@@ -11,9 +11,10 @@ from ..domains import Domain
 from .base_eq import TimeSplittingEquation
 
 # Useful physics constants for the GPE
-hbar = 1.05e-34 # J*s
-mass_Na23 = 3.8175406e-26 # kg (atomic mass of sodium-23)
-a0 = 5.29177210903e-11 # Bohr radius
+hbar = 1.05e-34  # J*s
+mass_Na23 = 3.8175406e-26  # kg (atomic mass of sodium-23)
+a0 = 5.29177210903e-11  # Bohr radius
+
 
 @dataclasses.dataclass
 class GPE2DTSControl(TimeSplittingEquation):
@@ -107,20 +108,25 @@ class GPE2DTSRot(TimeSplittingEquation):
     """Trap ellipticity parameter"""
     omega: float
     """Rotation frequency"""
-    
+
     def __post_init__(self):
         self.kx, self.ky = self.domain.fft_mesh()
         self.two_pi_i_kx = 2j * jnp.pi * self.kx
         self.two_pi_i_ky = 2j * jnp.pi * self.ky
-        self.two_pi_i_kx_2 = (self.two_pi_i_kx)**2
-        self.two_pi_i_ky_2 = (self.two_pi_i_ky)**2
+        self.two_pi_i_kx_2 = (self.two_pi_i_kx) ** 2
+        self.two_pi_i_ky_2 = (self.two_pi_i_ky) ** 2
         self.two_pi_i_k_2 = self.two_pi_i_kx_2 + self.two_pi_i_ky_2
         self.fft = jnp.fft.fftn
         self.ifft = jnp.fft.ifftn
         self.xmesh, self.ymesh = self.domain.mesh()
-        
+
     def A_terms(self, state_hat, t):
-        return 0.5j*self.two_pi_i_kx_2 - self.omega*self.ymesh*self.two_pi_i_kx, 0.5j*self.two_pi_i_ky_2 + self.omega*self.xmesh*self.two_pi_i_ky
+        return (
+            0.5j * self.two_pi_i_kx_2 - self.omega * self.ymesh * self.two_pi_i_kx,
+            0.5j * self.two_pi_i_ky_2 + self.omega * self.xmesh * self.two_pi_i_ky,
+        )
 
     def B_terms(self, state, t):
-        return -0.5j*((1+self.e)*self.xmesh**2 + (1-self.e)*self.ymesh**2) - self.k*1j*(jnp.abs(state)**2)
+        return -0.5j * (
+            (1 + self.e) * self.xmesh**2 + (1 - self.e) * self.ymesh**2
+        ) - self.k * 1j * (jnp.abs(state) ** 2)

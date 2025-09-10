@@ -6,7 +6,7 @@ equation classes defined in the numerics.equations module.
 
 Available Solvers:
     SemiImplicitFourierSpectral: Semi-implicit Fourier spectral method.
-    
+
     StrangSplitting: Strang splitting method for equations with separable operators
         (e.g., Gross-Pitaevskii equation).
 
@@ -18,6 +18,7 @@ import diffrax as dfx
 import jax
 import jax.numpy as jnp
 from typing import Callable
+
 
 class SemiImplicitFourierSpectral(dfx.AbstractSolver):
     """Semi-implicit Fourier spectral method.
@@ -33,12 +34,12 @@ class SemiImplicitFourierSpectral(dfx.AbstractSolver):
         A (float): Constant for splitting the mobility term.
 
     References:
-        Zhu, Jingzhi, et al. "Coarsening kinetics from a variable-mobility Cahn-Hilliard 
-        equation: Application of a semi-implicit Fourier spectral method." Physical Review E 
+        Zhu, Jingzhi, et al. "Coarsening kinetics from a variable-mobility Cahn-Hilliard
+        equation: Application of a semi-implicit Fourier spectral method." Physical Review E
         60.4 (1999): 3564.
     """
 
-    required_equation_attrs = ['fourier_symbol', 'fft', 'ifft']
+    required_equation_attrs = ["fourier_symbol", "fft", "ifft"]
     A: float
     fourier_symbol: jax.Array
     fft: Callable
@@ -70,16 +71,17 @@ class SemiImplicitFourierSpectral(dfx.AbstractSolver):
 
     def func(self, terms, t0, y0, args):
         return terms.vf(t0, y0, args)
-    
+
+
 class StrangSplitting(dfx.AbstractSolver):
     """Strang splitting method for time-dependent PDEs with separable operators.
 
     References:
-        Bao, Weizhu, and Yongyong Cai. "Mathematical theory and numerical methods for 
+        Bao, Weizhu, and Yongyong Cai. "Mathematical theory and numerical methods for
         Bose-Einstein condensation." arXiv preprint arXiv:1212.5341 (2012).
     """
 
-    required_equation_attrs = ['A_term', 'dx', 'fft', 'ifft']
+    required_equation_attrs = ["A_term", "dx", "fft", "ifft"]
     A_term: jax.Array
     dx: float
     fft: Callable
@@ -98,18 +100,18 @@ class StrangSplitting(dfx.AbstractSolver):
         del solver_state, made_jump
         δt = (t1 - t0) * self.time_scale
 
-        y0_ = y0[...,0] + 1j*y0[...,1]
+        y0_ = y0[..., 0] + 1j * y0[..., 1]
 
-        exp_A_term = jnp.exp(self.A_term*0.5*δt)
+        exp_A_term = jnp.exp(self.A_term * 0.5 * δt)
 
-        tmp = self.fft(y0_)*exp_A_term # 1
-        tmp = self.ifft(tmp) # 2
+        tmp = self.fft(y0_) * exp_A_term  # 1
+        tmp = self.ifft(tmp)  # 2
         b_term = terms.vf(t0, y0, args)
-        tmp = tmp * jnp.exp((b_term[...,0] + 1j*b_term[...,1])*δt) # 3
-        tmp /= jnp.sqrt(jnp.sum(jnp.abs(tmp)**2) * self.dx**2) # 4
-        tmp = self.fft(tmp) # 5
-        tmp = tmp*exp_A_term # 6
-        y1_ = self.ifft(tmp) # 7
+        tmp = tmp * jnp.exp((b_term[..., 0] + 1j * b_term[..., 1]) * δt)  # 3
+        tmp /= jnp.sqrt(jnp.sum(jnp.abs(tmp) ** 2) * self.dx**2)  # 4
+        tmp = self.fft(tmp)  # 5
+        tmp = tmp * exp_A_term  # 6
+        y1_ = self.ifft(tmp)  # 7
         y1 = jnp.stack([y1_.real, y1_.imag], axis=-1)
         # TODO: I should be able to change order and reduce number of ffts
 

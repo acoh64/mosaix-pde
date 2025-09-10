@@ -45,33 +45,29 @@ from .numerics.solvers import (
 
 __all__ = [
     # Core classes
-    'PDEModel',
-    'PDEEnv',
-    
+    "PDEModel",
+    "PDEEnv",
     # Equations
-    'BaseEquation',
-    'AllenCahn2DPeriodic',
-    'AllenCahn2DSmoothedBoundary',
-    'CahnHilliard2DPeriodic',
-    'CahnHilliard3DPeriodic',
-    'CahnHilliard2DSmoothedBoundary',
-    'GPE2DTSControl',
-    'GPE2DTSRot',
-    
+    "BaseEquation",
+    "AllenCahn2DPeriodic",
+    "AllenCahn2DSmoothedBoundary",
+    "CahnHilliard2DPeriodic",
+    "CahnHilliard3DPeriodic",
+    "CahnHilliard2DSmoothedBoundary",
+    "GPE2DTSControl",
+    "GPE2DTSRot",
     # Domains and Shapes
-    'Domain',
-    'Shape',
-    
+    "Domain",
+    "Shape",
     # Functions
-    'PeriodicCNN',
-    'LegendrePolynomialExpansion',
-    'LegendrePolynomialExpansion2D',
-    'DiffusionLegendrePolynomials',
-    'ChemicalPotentialLegendrePolynomials',
-    'MixerBlock',
-    'MixerMLP',
-    
+    "PeriodicCNN",
+    "LegendrePolynomialExpansion",
+    "LegendrePolynomialExpansion2D",
+    "DiffusionLegendrePolynomials",
+    "ChemicalPotentialLegendrePolynomials",
+    "MixerBlock",
+    "MixerMLP",
     # Solvers
-    'SemiImplicitFourierSpectral',
-    'StrangSplitting',
+    "SemiImplicitFourierSpectral",
+    "StrangSplitting",
 ]

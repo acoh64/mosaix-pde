@@ -6,12 +6,15 @@ import jax.numpy as jnp
 
 _TWO_PI = 2.0 * jnp.pi
 
+
 def density(psi):
-    return jnp.abs(psi)**2
+    return jnp.abs(psi) ** 2
+
 
 def _wrap_to_pi(x):
     # map to (-pi, pi]
     return (x + jnp.pi) % (2 * jnp.pi) - jnp.pi
+
 
 def detect_vortices(psi, amp_thresh=0.0, tol=0.5):
     """
@@ -46,10 +49,7 @@ def detect_vortices(psi, amp_thresh=0.0, tol=0.5):
     # Circulation around each plaquette (i,j) in CCW order:
     # right edge at (i,j), top edge at (i,j+1), left edge at (i+1,j), bottom at (i,j)
     circulation = (
-        dth_x
-        + jnp.roll(dth_y, -1, axis=1)
-        - jnp.roll(dth_x, -1, axis=0)
-        - dth_y
+        dth_x + jnp.roll(dth_y, -1, axis=1) - jnp.roll(dth_x, -1, axis=0) - dth_y
     )
 
     # Convert to integer winding; suppress tiny noisy circulations with tol

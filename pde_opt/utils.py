@@ -30,6 +30,7 @@ def check_equation_solver_compatibility(solver_type, equation_type):
             f"attributes for solver {solver_type.__name__}: {missing_attrs}"
         )
 
+
 def prepare_solver_params(solver_type, solver_parameters, equation):
     """Prepare solver parameters by extracting required equation attributes.
 

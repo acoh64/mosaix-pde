@@ -40,7 +40,9 @@ class Shape:
     def smooth_shape(self) -> Array:
         """Smooths the shape using the Allen-Cahn equation with curvature minimization."""
 
-        potential = lambda u: 18.0 / self.smooth_epsilon * u * (1.0 - u) * (1.0 - 2.0 * u)
+        potential = (
+            lambda u: 18.0 / self.smooth_epsilon * u * (1.0 - u) * (1.0 - 2.0 * u)
+        )
 
         @jax.jit
         def rhs(t, u, args):
@@ -78,8 +80,6 @@ class Shape:
 
         return solution.ys[-1]
 
-
-
     def laplacian_from_mask(self, periodic: bool = False):
         """
         Unnormalized graph Laplacian (4-neighbour) from a 0/1 mask.
@@ -90,7 +90,7 @@ class Shape:
             L  : (n_nodes, n_nodes) CSR Laplacian
             ids: (H, W) array, node index in [0, n_nodes) or -1 if not a node
         """
-        mask = (self.binary > 0)
+        mask = self.binary > 0
         H, W = mask.shape
         ids = -np.ones((H, W), dtype=np.int64)
         ids[mask] = np.arange(mask.sum(), dtype=np.int64)
@@ -111,23 +111,25 @@ class Shape:
                 y0, y1 = max(0, dy), H + min(0, dy)
                 x0, x1 = max(0, dx), W + min(0, dx)
                 m1 = mask[y0:y1, x0:x1]
-                m2 = mask[y0-dy:y1-dy, x0-dx:x1-dx]
+                m2 = mask[y0 - dy : y1 - dy, x0 - dx : x1 - dx]
                 both = m1 & m2
                 if not both.any():
                     return np.empty(0, np.int64), np.empty(0, np.int64)
                 u = ids[y0:y1, x0:x1][both]
-                v = ids[y0-dy:y1-dy, x0-dx:x1-dx][both]
+                v = ids[y0 - dy : y1 - dy, x0 - dx : x1 - dx][both]
                 return u, v
 
         # Build edges once using right and down neighbours, then symmetrize
-        ur, vr = undirected_edges(0, +1)   # right
-        ud, vd = undirected_edges(+1, 0)   # down
+        ur, vr = undirected_edges(0, +1)  # right
+        ud, vd = undirected_edges(+1, 0)  # down
 
         u_one = np.concatenate([ur, ud])
         v_one = np.concatenate([vr, vd])
 
         # Degree from unique undirected edges: each endpoint counted once
-        deg = np.bincount(np.concatenate([u_one, v_one]), minlength=n).astype(np.float64)
+        deg = np.bincount(np.concatenate([u_one, v_one]), minlength=n).astype(
+            np.float64
+        )
 
         # Off-diagonals: symmetrize edges (u,v) and (v,u)
         rows_off = np.concatenate([u_one, v_one])
@@ -141,7 +143,6 @@ class Shape:
 
         L = coo_matrix((data, (rows, cols)), shape=(n, n)).tocsr()
         return L, ids
-
 
     def get_shape_modes(self, N: Optional[int] = None):
         """Get the first N eigenvectors of the graph Laplacian of the binary mask.
@@ -159,8 +160,7 @@ class Shape:
         Returns:
             Array of shape (num_nodes, N) containing the first N eigenvectors
         """
-        
-        
+
         laplacian, node_ids = self.laplacian_from_mask()
         # return laplacian, node_ids
 
@@ -176,9 +176,9 @@ class Shape:
         sigma = max(diag_mean, 1.0) * 1e-8
         # Get only the first N eigenvectors (much faster than computing all)
         eigenvals, eigenvecs = scipy.sparse.linalg.eigsh(
-            laplacian, 
+            laplacian,
             k=N,
-            which='LM',
+            which="LM",
             sigma=sigma,
             tol=1e-8,
             maxiter=None,
@@ -192,7 +192,7 @@ class Shape:
         # Get valid node positions (where node_ids >= 0)
         valid_mask = node_ids >= 0
         valid_node_ids = node_ids[valid_mask]
-        
+
         # print(valid_mask)
         # print(valid_node_ids)
 

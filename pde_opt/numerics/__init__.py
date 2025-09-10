@@ -15,27 +15,23 @@ from .solvers import SemiImplicitFourierSpectral, StrangSplitting
 
 __all__ = [
     # Domains and shapes
-    'Domain',
-    'Shape',
-    
+    "Domain",
+    "Shape",
     # Equations (imported from .equations)
-    'AllenCahn2DPeriodic',
-    'AllenCahn2DSmoothedBoundary',
-    'CahnHilliard2DPeriodic',
-    'CahnHilliard3DPeriodic',
-    'CahnHilliard2DSmoothedBoundary',
-    'GPE2DTSControl',
-    'GPE2DTSRot',
-    
+    "AllenCahn2DPeriodic",
+    "AllenCahn2DSmoothedBoundary",
+    "CahnHilliard2DPeriodic",
+    "CahnHilliard3DPeriodic",
+    "CahnHilliard2DSmoothedBoundary",
+    "GPE2DTSControl",
+    "GPE2DTSRot",
     # Functions (imported from .functions)
-    'PeriodicCNN',
-    'LegendrePolynomialExpansion',
-    'DiffusionLegendrePolynomials',
-    'ChemicalPotentialLegendrePolynomials',
-    'Mixer2d',
-    
+    "PeriodicCNN",
+    "LegendrePolynomialExpansion",
+    "DiffusionLegendrePolynomials",
+    "ChemicalPotentialLegendrePolynomials",
+    "Mixer2d",
     # Solvers
-    'SemiImplicitFourierSpectral',
-    'StrangSplitting',
-    
+    "SemiImplicitFourierSpectral",
+    "StrangSplitting",
 ]

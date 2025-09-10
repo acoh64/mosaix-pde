@@ -9,6 +9,7 @@ import jax.numpy as jnp
 
 from .shapes import Shape
 
+
 @dataclasses.dataclass
 class Domain:
     """Sets up a simulation domain for the model.

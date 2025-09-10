@@ -2,7 +2,6 @@
 This module contains various Allen-Cahn equation classes.
 """
 
-
 import dataclasses
 from typing import Callable, Union
 import jax
@@ -12,7 +11,17 @@ import equinox as eqx
 from ..domains import Domain
 from .base_eq import BaseEquation
 from ..utils.derivatives import _lap_2nd_2D
-from ..utils.derivatives import _gradx_c, _grady_c, _avgx_c2f, _avgy_c2f, _divx_f2c, _divy_f2c, _gradx_c2f, _grady_c2f
+from ..utils.derivatives import (
+    _gradx_c,
+    _grady_c,
+    _avgx_c2f,
+    _avgy_c2f,
+    _divx_f2c,
+    _divy_f2c,
+    _gradx_c2f,
+    _grady_c2f,
+)
+
 
 @dataclasses.dataclass
 class AllenCahn2DPeriodic(BaseEquation):
@@ -54,7 +63,7 @@ class AllenCahn2DPeriodic(BaseEquation):
         self.two_pi_i_k_2 = self.two_pi_i_kx_2 + self.two_pi_i_ky_2
         self.fft = jnp.fft.fftn
         self.ifft = jnp.fft.ifftn
-        
+
         if self.derivs == "fourier":
             self.rhs = jax.jit(self.rhs_fourier)
         elif self.derivs == "fd":
@@ -64,13 +73,16 @@ class AllenCahn2DPeriodic(BaseEquation):
 
     def rhs_fourier(self, state, t):
         state_hat = self.fft(state)
-        mu = self.ifft(self.fft(self.mu(state)) - self.kappa * (self.two_pi_i_k_2) * state_hat).real
+        mu = self.ifft(
+            self.fft(self.mu(state)) - self.kappa * (self.two_pi_i_k_2) * state_hat
+        ).real
         return -self.R(state) * mu
 
     def rhs_fd(self, state, t):
         hx, hy = self.domain.dx
         mu = self.mu(state) - self.kappa * _lap_2nd_2D(state, hx, hy)
         return -self.R(state) * mu
+
 
 @dataclasses.dataclass
 class AllenCahn2DSmoothedBoundary(BaseEquation):
@@ -88,7 +100,7 @@ class AllenCahn2DSmoothedBoundary(BaseEquation):
     where the chemical potential includes boundary effects:
 
     .. math::
-        \\mu = \\mu_h(u) - \\frac{\\kappa}{\\psi} \\nabla \\cdot (\\psi \\nabla u) 
+        \\mu = \\mu_h(u) - \\frac{\\kappa}{\\psi} \\nabla \\cdot (\\psi \\nabla u)
         - \\sqrt{\\kappa} \\frac{|\\nabla \\psi|}{\\psi} \\sqrt{2f} \\cos(\\theta)
     """
 
@@ -133,7 +145,7 @@ class AllenCahn2DSmoothedBoundary(BaseEquation):
         mask_avgx = _avgx_c2f(self.psi)
         mask_avgy = _avgy_c2f(self.psi)
         mu += (
-            - (self.kappa / self.psi)
+            -(self.kappa / self.psi)
             * (
                 _divx_f2c(mask_avgx * _gradx_c2f(state, self.hx), self.hx)
                 + _divy_f2c(mask_avgy * _grady_c2f(state, self.hy), self.hy)
@@ -141,6 +153,7 @@ class AllenCahn2DSmoothedBoundary(BaseEquation):
             - self.sqrt_kappa
             * self.norm_grad_psi
             * jnp.sqrt(2.0 * f)
-            * jnp.cos(self.theta(t)) * self.left_half
+            * jnp.cos(self.theta(t))
+            * self.left_half
         )
         return -self.R(state) * mu
