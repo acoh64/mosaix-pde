@@ -25,6 +25,12 @@ dependencies = [
     "einops>=0.8.1"
 ]
 
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "ruff"
+]
+
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["pde_opt*"]
