@@ -15,7 +15,6 @@ hbar = 1.05e-34  # J*s
 mass_Na23 = 3.8175406e-26  # kg (atomic mass of sodium-23)
 a0 = 5.29177210903e-11  # Bohr radius
 
-
 @dataclasses.dataclass
 class GPE2DTSControl(TimeSplittingEquation):
     """Gross-Pitaevskii equation in 2D with time-splitting and control.

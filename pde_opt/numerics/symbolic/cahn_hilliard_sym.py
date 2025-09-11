@@ -4,7 +4,6 @@ This module contains a symbolic equation class for the Cahn-Hilliard equation.
 
 from dataclasses import dataclass
 from typing import Callable
-import numpy as np
 import sympy as sp
 from sympy.utilities.lambdify import lambdify
 import jax.numpy as jnp  # only to return jnp arrays if you like; optional
@@ -26,8 +25,6 @@ class SymbolicCahnHilliard2DPeriodic(BaseSymbolicEquation):
         x, y, t = sp.symbols("x y t", real=True)
         u = self.u_star
 
-        u_x = sp.diff(u, x)
-        u_y = sp.diff(u, y)
         u_xx = sp.diff(u, x, 2)
         u_yy = sp.diff(u, y, 2)
 

@@ -65,8 +65,7 @@ __all__ = [
     "LegendrePolynomialExpansion2D",
     "DiffusionLegendrePolynomials",
     "ChemicalPotentialLegendrePolynomials",
-    "MixerBlock",
-    "MixerMLP",
+    "Mixer2d",
     # Solvers
     "SemiImplicitFourierSpectral",
     "StrangSplitting",

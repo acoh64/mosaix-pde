@@ -79,5 +79,3 @@ env = gym.make('AdvectionDiffusion-v0', **params)
 observation, info = env.reset()
 
 observation, reward, terminated, truncated, info = env.step(action)
-
-

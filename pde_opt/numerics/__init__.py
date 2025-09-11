@@ -5,10 +5,24 @@ from .domains import Domain
 from .shapes import Shape
 
 # Equations
-from .equations import *
+from .equations import (
+    AllenCahn2DPeriodic,
+    AllenCahn2DSmoothedBoundary,
+    CahnHilliard2DPeriodic,
+    CahnHilliard3DPeriodic,
+    CahnHilliard2DSmoothedBoundary,
+    GPE2DTSControl,
+    GPE2DTSRot,
+)
 
 # Functions
-from .functions import *
+from .functions import (
+    PeriodicCNN,
+    LegendrePolynomialExpansion,
+    DiffusionLegendrePolynomials,
+    ChemicalPotentialLegendrePolynomials,
+    Mixer2d,
+)
 
 # Solvers
 from .solvers import SemiImplicitFourierSpectral, StrangSplitting

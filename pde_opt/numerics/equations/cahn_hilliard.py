@@ -24,7 +24,6 @@ from ..utils.derivatives import (
     _divz_f2c,
     _gradx_c,
     _grady_c,
-    _gradz_c,
 )
 
 

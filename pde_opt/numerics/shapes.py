@@ -7,7 +7,6 @@ import dataclasses
 import jax
 import jax.numpy as jnp
 from typing import Tuple, Optional
-import dataclasses
 import diffrax as dfx
 import scipy
 import numpy as np
@@ -40,9 +39,8 @@ class Shape:
     def smooth_shape(self) -> Array:
         """Smooths the shape using the Allen-Cahn equation with curvature minimization."""
 
-        potential = (
-            lambda u: 18.0 / self.smooth_epsilon * u * (1.0 - u) * (1.0 - 2.0 * u)
-        )
+        def potential(u):
+            return 18.0 / self.smooth_epsilon * u * (1.0 - u) * (1.0 - 2.0 * u)
 
         @jax.jit
         def rhs(t, u, args):

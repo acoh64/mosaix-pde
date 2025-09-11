@@ -2,10 +2,9 @@ import gymnasium as gym
 from gymnasium import spaces
 from gymnasium.envs.registration import register
 import numpy as np
-import jax.numpy as jnp
 import diffrax
 import jax
-from typing import Callable, Optional, Type, Dict, Any, Tuple
+from typing import Callable, Optional, Type, Dict, Any
 
 from .numerics.equations import BaseEquation
 from .numerics import domains

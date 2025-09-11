@@ -205,7 +205,10 @@ class AllenCahn2DPeriodicButlerVolmer(BaseEquation):
         hx, hy = self.domain.dx
         mu = self.mu(state) - self.kappa * _lap_2nd_2D(state, hx, hy)
         eta = mu + v
-        return self.j0(state) * (jnp.exp(-self.alpha * eta) - jnp.exp((1. - self.alpha) * eta))
+        return self.j0(state) * (
+            jnp.exp(-self.alpha * eta) - jnp.exp((1.0 - self.alpha) * eta)
+        )
+
 
 @dataclasses.dataclass
 class AllenCahn2DPeriodicButlerVolmerConstantCurrent(BaseEquation):
@@ -219,7 +222,7 @@ class AllenCahn2DPeriodicButlerVolmerConstantCurrent(BaseEquation):
     """Function for the exchange current"""
     alpha: float
     """Symmetry factor"""
-    I: float
+    Crate: float
     """Current"""
     derivs: str = "fd"
     """Type of derivative computation"""
@@ -256,24 +259,30 @@ class AllenCahn2DPeriodicButlerVolmerConstantCurrent(BaseEquation):
         mu = self.mu(state) - self.kappa * _lap_2nd_2D(state, hx, hy)
         int_plus = jnp.sum(self.j0(state) * jnp.exp(0.5 * mu)) * hx * hy
         int_minus = jnp.sum(self.j0(state) * jnp.exp(-0.5 * mu)) * hx * hy
-        y = (-self.I + jnp.sqrt(self.I**2 + 4.0 * int_plus * int_minus)) / (2.0 * int_plus)
+        y = (-self.Crate + jnp.sqrt(self.Crate**2 + 4.0 * int_plus * int_minus)) / (
+            2.0 * int_plus
+        )
         # Compute v to satisfy constant current constraint
         v = 2.0 * jnp.log(y)
         eta = mu + v
-        return self.j0(state) * (jnp.exp(-self.alpha * eta) - jnp.exp((1. - self.alpha) * eta))
+        return self.j0(state) * (
+            jnp.exp(-self.alpha * eta) - jnp.exp((1.0 - self.alpha) * eta)
+        )
 
     def get_voltage(self, state):
         hx, hy = self.domain.dx
         mu = self.mu(state) - self.kappa * _lap_2nd_2D(state, hx, hy)
         int_plus = jnp.sum(self.j0(state) * jnp.exp(0.5 * mu)) * hx * hy
         int_minus = jnp.sum(self.j0(state) * jnp.exp(-0.5 * mu)) * hx * hy
-        y = (-self.I + jnp.sqrt(self.I**2 + 4.0 * int_plus * int_minus)) / (2.0 * int_plus)
+        y = (-self.Crate + jnp.sqrt(self.Crate**2 + 4.0 * int_plus * int_minus)) / (
+            2.0 * int_plus
+        )
         # Compute v to satisfy constant current constraint
         return 2.0 * jnp.log(y)
 
+
 @dataclasses.dataclass
 class AllenCahn2DSmoothedBoundaryButlerVolmerConstantCurrent(BaseEquation):
-
     domain: Domain
     """Domain of the equation"""
     kappa: float
@@ -286,7 +295,7 @@ class AllenCahn2DSmoothedBoundaryButlerVolmerConstantCurrent(BaseEquation):
     """Function for the exchange current"""
     alpha: float
     """Symmetry factor"""
-    I: float
+    Crate: float
     """Current"""
     derivs: str = "fd"
     """Type of derivative computation"""
@@ -312,7 +321,7 @@ class AllenCahn2DSmoothedBoundaryButlerVolmerConstantCurrent(BaseEquation):
             raise ValueError(f"Invalid derivative type: {self.derivs}")
 
     def rhs_fd(self, state, t):
-        f = self.f(state)
+        # f = self.f(state)
         mu = self.mu(state)
         mask_avgx = _avgx_c2f(self.psi)
         mask_avgy = _avgy_c2f(self.psi)
@@ -328,16 +337,24 @@ class AllenCahn2DSmoothedBoundaryButlerVolmerConstantCurrent(BaseEquation):
             # * jnp.cos(self.theta(t))
             # * self.left_half
         )
-        int_plus = jnp.sum(self.j0(state) * jnp.exp(0.5 * mu) * self.psi) * self.hx * self.hy
-        int_minus = jnp.sum(self.j0(state) * jnp.exp(-0.5 * mu) * self.psi) * self.hx * self.hy
-        y = (-self.I + jnp.sqrt(self.I**2 + 4.0 * int_plus * int_minus)) / (2.0 * int_plus)
+        int_plus = (
+            jnp.sum(self.j0(state) * jnp.exp(0.5 * mu) * self.psi) * self.hx * self.hy
+        )
+        int_minus = (
+            jnp.sum(self.j0(state) * jnp.exp(-0.5 * mu) * self.psi) * self.hx * self.hy
+        )
+        y = (-self.Crate + jnp.sqrt(self.Crate**2 + 4.0 * int_plus * int_minus)) / (
+            2.0 * int_plus
+        )
         # Compute v to satisfy constant current constraint
         v = 2.0 * jnp.log(y)
         eta = mu + v
-        return self.j0(state) * (jnp.exp(-self.alpha * eta) - jnp.exp((1. - self.alpha) * eta))
+        return self.j0(state) * (
+            jnp.exp(-self.alpha * eta) - jnp.exp((1.0 - self.alpha) * eta)
+        )
 
     def get_voltage(self, state):
-        f = self.f(state)
+        # f = self.f(state)
         mu = self.mu(state)
         mask_avgx = _avgx_c2f(self.psi)
         mask_avgy = _avgy_c2f(self.psi)
@@ -353,8 +370,14 @@ class AllenCahn2DSmoothedBoundaryButlerVolmerConstantCurrent(BaseEquation):
             # * jnp.cos(self.theta(t))
             # * self.left_half
         )
-        int_plus = jnp.sum(self.j0(state) * jnp.exp(0.5 * mu) * self.psi) * self.hx * self.hy
-        int_minus = jnp.sum(self.j0(state) * jnp.exp(-0.5 * mu) * self.psi) * self.hx * self.hy
-        y = (-self.I + jnp.sqrt(self.I**2 + 4.0 * int_plus * int_minus)) / (2.0 * int_plus)
+        int_plus = (
+            jnp.sum(self.j0(state) * jnp.exp(0.5 * mu) * self.psi) * self.hx * self.hy
+        )
+        int_minus = (
+            jnp.sum(self.j0(state) * jnp.exp(-0.5 * mu) * self.psi) * self.hx * self.hy
+        )
+        y = (-self.Crate + jnp.sqrt(self.Crate**2 + 4.0 * int_plus * int_minus)) / (
+            2.0 * int_plus
+        )
         # Compute v to satisfy constant current constraint
         return 2.0 * jnp.log(y)

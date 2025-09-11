@@ -4,7 +4,6 @@ This module contains a periodic CNN class for representing functions in PDEs.
 
 from typing import Callable, Sequence, Tuple, Union
 import jax
-import jax.numpy as jnp
 import equinox as eqx
 import equinox.nn as nn
 

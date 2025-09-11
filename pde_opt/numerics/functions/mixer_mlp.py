@@ -6,7 +6,6 @@ Based on the code from https://docs.kidger.site/equinox/examples/score_based_dif
 
 import equinox as eqx
 import jax
-import jax.numpy as jnp
 import jax.random as jr
 import einops
 

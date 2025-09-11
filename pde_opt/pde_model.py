@@ -505,22 +505,22 @@ class PDEModel:
         def objective_wrapper(_opt_params, args):
             full_params = eqx.combine(_opt_params, opt_params_static)
             all_params = {**full_params, **other_parameters}
-            
+
             # Solve the PDE with current parameters
             solution = self.solve(
-                all_params, 
-                y0, 
-                ts, 
-                solver_parameters, 
-                adjoint=dfx.RecursiveCheckpointAdjoint()
+                all_params,
+                y0,
+                ts,
+                solver_parameters,
+                adjoint=dfx.RecursiveCheckpointAdjoint(),
             )
-            
+
             # Compute the objective function value
             objective_value = objective_function(solution)
-            
+
             # Add regularization
             reg = self.regularization(all_params, weights, lambda_reg)
-            
+
             return objective_value + reg
 
         # Partition parameters into optimizable and static parts
