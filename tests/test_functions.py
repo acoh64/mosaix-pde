@@ -6,6 +6,7 @@ from pde_opt.numerics.functions import LegendrePolynomialExpansion, DiffusionLeg
 
 # Force JAX to use CPU for tests
 jax.config.update('jax_platforms', 'cpu')
+jax.config.update("jax_enable_x64", True)
 
 # Standard Python implementation of Legendre polynomials using numpy.polynomial
 from numpy.polynomial.legendre import legval

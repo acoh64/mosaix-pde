@@ -17,7 +17,7 @@ def l2_rel_err(numeric, symbolic):
     return np.sqrt(np.sum((numeric - symbolic) ** 2)) / np.sqrt(np.sum(symbolic**2))
 
 
-def test_convergence(
+def check_convergence(
     numeric: Type[BaseEquation],
     symbolic: Type[BaseSymbolicEquation],
     numeric_args,
