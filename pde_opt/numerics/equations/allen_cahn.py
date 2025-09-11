@@ -322,14 +322,14 @@ class AllenCahn2DSmoothedBoundaryButlerVolmerConstantCurrent(BaseEquation):
                 _divx_f2c(mask_avgx * _gradx_c2f(state, self.hx), self.hx)
                 + _divy_f2c(mask_avgy * _grady_c2f(state, self.hy), self.hy)
             )
-            - self.sqrt_kappa
-            * self.norm_grad_psi
-            * jnp.sqrt(2.0 * f)
-            * jnp.cos(self.theta(t))
-            * self.left_half
+            # - self.sqrt_kappa
+            # * self.norm_grad_psi
+            # * jnp.sqrt(2.0 * f)
+            # * jnp.cos(self.theta(t))
+            # * self.left_half
         )
-        int_plus = jnp.sum(self.j0(state) * jnp.exp(0.5 * mu)) * self.hx * self.hy * self.psi
-        int_minus = jnp.sum(self.j0(state) * jnp.exp(-0.5 * mu)) * self.hx * self.hy * self.psi
+        int_plus = jnp.sum(self.j0(state) * jnp.exp(0.5 * mu) * self.psi) * self.hx * self.hy
+        int_minus = jnp.sum(self.j0(state) * jnp.exp(-0.5 * mu) * self.psi) * self.hx * self.hy
         y = (-self.I + jnp.sqrt(self.I**2 + 4.0 * int_plus * int_minus)) / (2.0 * int_plus)
         # Compute v to satisfy constant current constraint
         v = 2.0 * jnp.log(y)
@@ -337,9 +337,24 @@ class AllenCahn2DSmoothedBoundaryButlerVolmerConstantCurrent(BaseEquation):
         return self.j0(state) * (jnp.exp(-self.alpha * eta) - jnp.exp((1. - self.alpha) * eta))
 
     def get_voltage(self, state):
-        mu = self.mu(state) - self.kappa * _lap_2nd_2D(state, self.hx, self.hy)
-        int_plus = jnp.sum(self.j0(state) * jnp.exp(0.5 * mu)) * self.hx * self.hy * self.psi
-        int_minus = jnp.sum(self.j0(state) * jnp.exp(-0.5 * mu)) * self.hx * self.hy * self.psi
+        f = self.f(state)
+        mu = self.mu(state)
+        mask_avgx = _avgx_c2f(self.psi)
+        mask_avgy = _avgy_c2f(self.psi)
+        mu += (
+            -(self.kappa / self.psi)
+            * (
+                _divx_f2c(mask_avgx * _gradx_c2f(state, self.hx), self.hx)
+                + _divy_f2c(mask_avgy * _grady_c2f(state, self.hy), self.hy)
+            )
+            # - self.sqrt_kappa
+            # * self.norm_grad_psi
+            # * jnp.sqrt(2.0 * f)
+            # * jnp.cos(self.theta(t))
+            # * self.left_half
+        )
+        int_plus = jnp.sum(self.j0(state) * jnp.exp(0.5 * mu) * self.psi) * self.hx * self.hy
+        int_minus = jnp.sum(self.j0(state) * jnp.exp(-0.5 * mu) * self.psi) * self.hx * self.hy
         y = (-self.I + jnp.sqrt(self.I**2 + 4.0 * int_plus * int_minus)) / (2.0 * int_plus)
         # Compute v to satisfy constant current constraint
         return 2.0 * jnp.log(y)

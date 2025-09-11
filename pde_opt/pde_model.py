@@ -458,3 +458,94 @@ class PDEModel:
             res = eqx.combine(sol.value, opt_params_static)
 
             return {**res, **other_parameters}
+
+    def optimize(
+        self,
+        objective_function,
+        y0,
+        ts,
+        opt_parameters,
+        other_parameters,
+        solver_parameters,
+        weights,
+        lambda_reg,
+        max_steps=100,
+    ):
+        """Optimize parameters by minimizing a scalar function of the solution.
+
+        This method performs parameter optimization by minimizing a user-provided scalar
+        function that takes the solution as input. It uses the BFGS algorithm for
+        optimization and supports parameter regularization.
+
+        Args:
+            objective_function (Callable): A callable function that takes the solution
+                array (shape: (len(ts), *y0.shape)) and returns a scalar value to minimize.
+                The function should be JAX-compatible for automatic differentiation.
+            y0: Initial condition array. Shape should match the spatial dimensions of
+                the domain.
+            ts: Time points at which to save the solution. Should be a 1D array of
+                increasing time values.
+            opt_parameters (Dict[str, jax.Array]): Parameters to optimize.
+            other_parameters (Dict[str, Any]): Fixed parameters that won't be optimized.
+            solver_parameters (Dict[str, Any]): Parameters for the numerical solver
+                during optimization. Passed to the solver constructor.
+            weights (Dict[str, jax.Array]): Regularization weights for each parameter.
+                Should have the same structure as opt_parameters.
+            lambda_reg (float): Regularization coefficient. Controls the strength of
+                parameter regularization.
+            max_steps (int, optional): Maximum number of optimization iterations.
+                Defaults to 100.
+
+        Returns:
+            Dict[str, Any]: Optimized parameters combined with fixed parameters.
+            The returned dictionary contains both the optimized parameters and the
+            other_parameters, ready for use in the solve() method.
+        """
+
+        def objective_wrapper(_opt_params, args):
+            full_params = eqx.combine(_opt_params, opt_params_static)
+            all_params = {**full_params, **other_parameters}
+            
+            # Solve the PDE with current parameters
+            solution = self.solve(
+                all_params, 
+                y0, 
+                ts, 
+                solver_parameters, 
+                adjoint=dfx.RecursiveCheckpointAdjoint()
+            )
+            
+            # Compute the objective function value
+            objective_value = objective_function(solution)
+            
+            # Add regularization
+            reg = self.regularization(all_params, weights, lambda_reg)
+            
+            return objective_value + reg
+
+        # Partition parameters into optimizable and static parts
+        opt_params, opt_params_static = eqx.partition(
+            opt_parameters, eqx.is_inexact_array_like
+        )
+
+        # Set up BFGS solver
+        solver = optx.BFGS(
+            rtol=1e-8,
+            atol=1e-8,
+            verbose=frozenset({"step", "accepted", "loss", "step_size"}),
+        )
+
+        # Optimize
+        sol = optx.minimise(
+            objective_wrapper,
+            solver,
+            opt_params,
+            args=(),  # No additional args needed since y0, ts are captured in closure
+            max_steps=max_steps,
+            throw=False,
+        )
+
+        # Combine optimized parameters with static parameters
+        res = eqx.combine(sol.value, opt_params_static)
+
+        return {**res, **other_parameters}
