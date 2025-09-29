@@ -59,10 +59,10 @@ class GPE2DTSControl(TimeSplittingEquation):
         self.ifft = jnp.fft.ifftn
         self.xmesh, self.ymesh = self.domain.mesh()
         self.control = lambda t: self.lights(t, self.xmesh, self.ymesh)
-        self.A_term = 0.5j * self.two_pi_i_k_2 * 0.0
+        self.A_term = 0.5j * self.two_pi_i_k_2 #* 0.0 need to set to zero for testing
 
     def A_terms(self, state, t):
-        return self.A_term * 0.0
+        return self.A_term #* 0.0 need to set to zero for testing
 
     def B_terms(self, state, t):
         tmp = (

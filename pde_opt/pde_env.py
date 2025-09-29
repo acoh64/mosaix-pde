@@ -199,9 +199,9 @@ class PDEEnv(gym.Env):
         """Get additional information about the environment state.
 
         Returns:
-            dict: Empty dictionary (placeholder for future extensions).
+            dict: Dictionary containing the current state (used for debugging).
         """
-        return {}
+        return {"state": self._state}
 
     def _terminate(self):
         """Check if the episode should terminate.

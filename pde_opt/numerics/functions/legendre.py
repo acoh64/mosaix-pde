@@ -74,6 +74,56 @@ class ChemicalPotentialLegendrePolynomials(eqx.Module):
         return result
 
 
+class FixedDegreeChemicalPotential(eqx.Module):
+    """Chemical potential with fixed high degree (1000) but zeros for unused parameters.
+    
+    This class always uses degree 1000 Legendre polynomials, but zeros out parameters
+    beyond the specified number. This ensures constant forward pass time while allowing
+    gradient computation scaling tests.
+
+    NOTE: THIS IS ONLY USED FOR TESTING PURPOSES.
+    """
+
+    expansion: LegendrePolynomialExpansion
+    prior_fn: Callable
+    num_active_params: int
+
+    def __init__(self, params: jax.Array, prior_fn: Callable = None):
+        super().__init__()
+        # Always create expansion with degree 1000
+        full_params = jnp.zeros(1001)  # 1000 degree + 1 for constant term
+        full_params = full_params.at[:len(params)].set(params)
+        self.expansion = LegendrePolynomialExpansion(full_params)
+        self.prior_fn = prior_fn
+        self.num_active_params = len(params)
+
+    @eqx.filter_jit
+    def __call__(self, inputs):
+        # Scale inputs to [-1, 1]
+        scaled_inputs = 2.0 * inputs - 1.0
+        result = self.expansion(scaled_inputs)
+        if self.prior_fn is not None:
+            result += self.prior_fn(inputs)
+        return result
+
+class TestChemicalPotential(eqx.Module):
+    """Test chemical potential."""
+
+    params: jax.Array
+    prior_fn: Callable
+
+    def __init__(self, params: jax.Array, prior_fn: Callable = None):
+        super().__init__()
+        self.params = params
+        self.prior_fn = prior_fn
+
+    @eqx.filter_jit
+    def __call__(self, inputs):
+        result = jnp.sum(self.params) * jnp.ones_like(inputs)
+        if self.prior_fn is not None:
+            result += self.prior_fn(inputs)
+        return result
+
 @dataclasses.dataclass
 class LegendrePolynomials:
     max_degree: int
