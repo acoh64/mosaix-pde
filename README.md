@@ -106,6 +106,7 @@ We have currently implemented variants of the following equations:
 - [ ] Arbitrary boundary conditions
 - [ ] Implicit time stepping
 - [ ] Multi-GPU support
+- [ ] Extend to non-Cartesian domains
 
 ## License
 

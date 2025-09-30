@@ -111,8 +111,8 @@ nbsphinx_allow_errors = True
 # -- Custom configuration ----------------------------------------------------
 
 # Add any custom configuration here
-html_logo = "cool_smile.png"
-html_favicon = "cool_smile.png"
+html_logo = "logo.png"
+html_favicon = "logo.png"
 
 # GitHub integration
 html_context = {
