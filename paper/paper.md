@@ -1,5 +1,5 @@
 ---
-title: 'pat-pde-opt: differentiable, pattern-forming PDEs for machine learning, optimization, and control'
+title: 'pat-pde-opt: Differentiable, pattern-forming PDEs for machine learning, optimization, and control'
 tags:
   - Python
   - JAX
@@ -58,19 +58,26 @@ The `PDEModel` is initialized with a combination of a Domain, Equation, and Solv
 The first is a `solve` method for solving the specified Equation on the given Domain with the specified Solver.
 In addition, the `fit` method provides the utilities for fitting parameters of functions within the Equation to a dataset.
 The `fit` method uses a multiple shooting approach which we found to be both computationally faster and more robust to noise in the dataset than other approaches.
+The multiple shooting approach works by `vmap`ing over multiple starting points in the dataset and evaluating the loss at future time points relative to each starting point. 
+The specific starting points and residual evaluation points are specified through the `inds` argument of the `fit` function.
 Currently, the optimization can be performed using the Levenberg-Marquardt method of BFGS, whose implementations are provided through the `optimistix` package.
-Gradients can be computed using forward or reverse mode automatic differentiation.
-Discuss tradeoff between timing but also convergence of the method since LM generally converged faster but requires the Gauss-Newton Hessian approximation which can only be computed efficiently with forward mode automatic differentiation (maybe talk about this more in the appendix).
+Gradients can be computed using forward or reverse mode automatic differentiation, which scale differently with the number of parameters (cite figure and cite julia paper).
+The Levenberg-Marquardt method requires Jacobians of the residuals for the Hessian approximation, which can be computed using forward mode automatic differentiation.
+Since the Levenberg-Marquardt method uses Gauss-Newton approximations of the Hessian, the method generally converges faster than BFGS. 
+However, BFGS does not require the Jacobian of the residuals for the Hessian approximation and thus the gradients can be computed easily using reverse-mode automatic differentiation, which scales much better with the number of parameters.
+This tradeoff between scaling with parameter numbers and convergence of optimization must be considered for these differentiable physics optimization problems.
+Finally, the `optimize` method uses BFGS from the `optimistix` package to minimize a scalar function of the solution, which is specified in the `objective_function` argument.
+`PDEModel` makes it easy to perform model learning and optimization simply from a Domain, Equation, and Solver.
 
-
-
-
-
+The `PDEEnv` class is useful for turning a PDE into a `Gymnasium`-registered reinforcement learning (RL) environment that can be used to train RL agents with libraries like Stable Baselines (cite pytorch and jax versions).
+In addition to the Domain, Equation, and Solver, the `PDEEnv` class requires a `step_dt`, which is the time span of one step of the environment, and a `numeric_dt` which is the time step to use for numerical integration. 
+These arae separate parameters because the action time of the agent is often larger than the time step needed for numerical stability.
+Beyond these fields, many other pieces of informataion must be provided to form the RL environment, including reward functions, observation functions, and reset functions.
 
 # Statement of need
-
+Mention visualPDE, py-pde, evoxels, dedalus, fenics, dolfinx, google research stuff on the weather code
 
 # Acknowledgements
-
+The authors acknowledge the MIT Office of Research Computing and Data for providing computational resources and advice on open-source scientific computing software.
 
 # References
