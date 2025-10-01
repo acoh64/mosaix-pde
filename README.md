@@ -107,6 +107,7 @@ We have currently implemented variants of the following equations:
 - [ ] Implicit time stepping
 - [ ] Multi-GPU support
 - [ ] Extend to non-Cartesian domains
+- [ ] WandB logging and checkpointing
 
 ## License
 
