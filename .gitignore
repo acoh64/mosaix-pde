@@ -214,3 +214,5 @@ timing_code/
 
 pde_opt/numerics/rock2_tableau.py
 pde_opt/numerics/solvers_rock2.py
+
+notebooks/
