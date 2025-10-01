@@ -11,7 +11,8 @@ authors:
     orcid: 0000-0002-5284-6775
     corresponding: true
     affiliation: 1
-  - name: Sam Degnan-Morgenstern
+  - name: Samuel Degnan-Morgenstern
+    orcid: 0009-0001-5023-1160
     affiliation: 1
   - name: Simon Daubner
     orcid: 0000-0002-7944-6026
