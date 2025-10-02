@@ -1,3 +1,6 @@
+pat-pde-opt
+======================================
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
