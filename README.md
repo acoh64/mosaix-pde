@@ -1,4 +1,4 @@
-<img src="docs/logo.png" width="200em" align="right" />
+<img src="https://raw.githubusercontent.com/acoh64/pde-opt/main/docs/logo.png" width="200em" align="right" />
 
 # pat-pde-opt
 
@@ -15,7 +15,7 @@ To install the package, we recommend cloning the github repo and then installing
 ```bash
 git clone https://github.com/acoh64/pde-opt.git
 cd pde-opt
-conda create -y -n pde-opt-env python=3.10
+conda create -y -n pde-opt-env python=3.12
 conda activate pde-opt-env
 pip install -e .
 ```

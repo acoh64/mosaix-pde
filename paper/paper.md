@@ -32,10 +32,10 @@ bibliography: paper.bib
 # Summary
 Pattern formation occurs in diverse physical systems across many length scales, from quantum systems to planetary atmospheres, and has applications in nanotechnology and biology [@barad2021; @kim20224].
 The physical laws and dynamics that dictate pattern formation are often expressed in the form of partial differential equations (PDEs).
-To learn models for these systems, optimize these systems, control these systems, or apply modern machine learning techniques to these systems, we need fast, differentiable, and GPU-powered numerical solvers.
+To learn models for these systems, optimize, control, or apply modern machine learning techniques to these systems, we need fast, differentiable, and GPU-powered numerical solvers.
 
 The `pat-pde-opt` package provides implementations of PDEs that describe pattern formation in a range of physical systems.
-The package aso provides a framework for extending the implementation to more PDEs.
+The package also provides a framework for extending the implementation to more PDEs.
 The code is written in JAX [@jax2018] and is fully differentiable and GPU-accelerated.
 To solve the time-dependent PDEs, `pat-pde-opt` converts the PDEs using the method of lines into a system of ordinary differential equations (ODEs), and evolves the resulting ODEs using `diffrax` [@kidger2021]. 
 Notably, `diffrax` provides binomial checkpointed adjoint methods, which is often essential for differentiating through PDE solves with a large number of time steps, as the memory requirements of backpropagation scales linearly with the number of steps.
@@ -47,8 +47,7 @@ The `pat-pde-opt` package is organized around Domains, Equations, and Solvers \a
 ![Code structure enables Equation, Domain, and Solver modules to be combined to build PDE models for machine learning applications.\label{fig:overview}](figure1_joss.png){ width=50% }
 The Domain class sets up the computational region for the simulation, including the mesh and axes in both real and Fourier space.
 The Domain also stores the Shape, which is used in the context of the smoothed boundary method.
-The Shape is initialized with a binary mask where 1s indicate the geometry and 0s indicate the empty space. 
-smoothly varying shape parameter at the boundary
+The Shape is initialized with a binary mask where 1s indicate the geometry and 0s indicate the empty space.
 Upon initialization, the binary mask is converted to a mask with a smoothly varying shape parameter at the boundary, as required for the smoothed boundary method.
 This smoothing is accomplished by evolving an Allen-Cahn equation with a laplacian term with reduced curvature minimization to maintain sharply curved features of the original shape.
 The degree of smoothing and curvature minimization can be controlled with hyperparameters.
@@ -63,8 +62,8 @@ Two interfaces are provided through the `PDEModel` and `PDEEnv` class for integr
 The `PDEModel` is initialized with a combination of a Domain, Equation, and Solver, and provides three main methods.
 The first is a `solve` method for solving the specified Equation on the given Domain with the specified Solver.
 In addition, the `train` method provides the utilities for fitting parameters or functions within the Equation to a dataset.
-The `train` method uses a multiple shooting approach which we is both computationally faster and more robust to noise in the dataset than other approaches.
-The multiple shooting approach works by `vmap`ing over multiple starting points in the dataset and evaluating the loss at future time points relative to each starting point. 
+The `train` method uses a multiple shooting approach which is both computationally faster and more robust to noise in the dataset than other approaches.
+The multiple shooting approach works by `vmap`-ing over multiple starting points in the dataset and evaluating the loss at future time points relative to each starting point. 
 The specific starting points and residual evaluation points are specified through the `inds` argument of the `train` function.
 Currently, the optimization can be performed using the Levenberg-Marquardt method or BFGS, whose implementations are provided through the `optimistix` package [@optimistix2024].
 Gradients can be computed using forward or reverse mode automatic differentiation, which scale differently with the number of parameters \autoref{fig:benchmark} [ma2021].
