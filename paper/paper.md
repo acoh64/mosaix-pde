@@ -1,5 +1,5 @@
 ---
-title: 'pat-pde-opt: Differentiable, pattern-forming PDEs for machine learning, optimization, and control'
+title: 'pat-pde-opt: Differentiable pattern-forming PDEs for machine learning, optimization, and control'
 tags:
   - Python
   - JAX
@@ -67,14 +67,15 @@ The `train` method uses a multiple shooting approach which is both computational
 The multiple shooting approach works by `vmap`-ing over multiple starting points in the dataset and evaluating the loss at future time points relative to each starting point. 
 The specific starting points and residual evaluation points are specified through the `inds` argument of the `train` function.
 Currently, the optimization can be performed using the Levenberg-Marquardt method or BFGS, whose implementations are provided through the `optimistix` package [@optimistix2024].
-Gradients can be computed using forward or reverse mode automatic differentiation, which scale differently with the number of parameters \autoref{fig:benchmark} [ma2021].
+Gradients can be computed using forward or reverse mode automatic differentiation, which scale differently with the number of parameters \autoref{fig:benchmark} [@ma2021].
 The Levenberg-Marquardt method requires Jacobians of the residuals for the Hessian approximation, which can be computed using forward mode automatic differentiation.
 Since the Levenberg-Marquardt method uses Gauss-Newton approximations of the Hessian, this method generally converges faster than BFGS. 
 However, BFGS does not require the Jacobian of the residuals for the Hessian approximation and thus the gradients can be computed easily using backpropagation, which scales much better with the number of parameters \autoref{fig:benchmark}.
 This tradeoff between scaling with parameter numbers and convergence of optimization must be considered for these differentiable physics optimization problems.
 Finally, the `optimize` method provides an interface for minimizing a scalar function of the PDE solution.
-The function to minimize is specified through the `objective_function` argument and BFGS is used to perform the optimization.
-![Benchmarking performance of solvers and gradients with different number of grid points and paramters.\label{fig:benchmark}](figure2_joss.png)
+The function to minimize is specified through the `objective_function` argument, and BFGS is used to perform the optimization.
+![Benchmarking performance of solvers and gradients with different number of grid points and parameters.\label{fig:benchmark}](figure2_joss.png)
+
 For reference, we benchmark the performance of numerically solving and computing gradients of PDE solutions \autoref{fig:benchmark}.
 We report the wall time scaling as a function of grid points of 10,000 time steps of the Cahn-Hilliard equation using a semi-implicit Fourier time stepping method, run on both GPU and CPU with Float32 and Float64 precision.
 We further show the wall time scaling with respect to the number of parameters when computing gradients through 1,000 time steps of the Cahn-Hilliard equation using forward- and reverse-mode automatic differentiation.
@@ -84,7 +85,7 @@ Finally, we compare a Tsit5 time stepper with our ROCK2 implementation and semi-
 The `PDEEnv` class is useful for turning a PDE into a `Gymnasium`-registered reinforcement learning (RL) environment that can be used to train RL agents with libraries like Stable Baselines [@towers2024; raffin2021].
 In addition to the Domain, Equation, and Solver, the `PDEEnv` class requires a `step_dt`, which is the time span of one step of the environment, and a `numeric_dt` which is the time step to use for numerical integration. 
 These are separate parameters because the reaction time of the agent is often larger than the time step needed for numerical stability.
-Beyond these fields, many other pieces of informataion must be provided to form the RL environment, including reward functions, observation functions, and reset functions.
+Beyond these fields, many other pieces of information must be provided to form the RL environment, including reward functions, observation functions, and reset functions.
 ![Single episode of an RL environment created from the Gross-Pitaevskii equation.\label{fig:rl_env}](figure3_joss.png)
 We demonstrate an example of creating an RL environment designed to form vortices in a Bose-Einstein condensate by controlling the position of an external laser source \autoref{fig:rl_env}.
 The episode is simulated by sampling random actions that move the position of the laser (red line), where the reward is calculated by counting the number of vortices in the condensate (black and white circles).
@@ -95,13 +96,13 @@ Pattern formation and phase separation are fundamental processes across physics,
 At the same time, the rapid growth of scientific machine learning has shown how partial differential equation (PDE) models can be combined with modern optimization and learning techniques to accelerate discovery, most prominently in applications such as weather and climate modeling [@kochkov2024], material modeling [@zhao2020; @zhao2023], and biophysics [@supekar2023]. 
 Building on these advances, there is growing interest in extending such capabilities to pattern-forming systems, where fast, differentiable, and GPU-accelerated PDE solvers can enable parameter learning, design optimization, and reinforcement learning–based control.
 To support this, the community needs open-source tools that are performant, easy to use, well documented, and straightforward to extend.
-Existing simulation libraries for pattern formation provide valuable tools, but they are often not directly integrated with these machine learning workflows [@walker2023; @burns2020; @zwicker2020; @daubner2025].
+Existing simulation libraries for pattern formation provide valuable tools, but are often not directly integrated with these machine learning workflows [@walker2023; @burns2020; @zwicker2020; @daubner2025].
 In addition, packages that treat PDEs as reinforcement learning environments are generally restricted to a small set of select equations [@bhan2024; @werner2024].
 Our framework extends this ecosystem by coupling performant PDE solvers with differentiability, RL interfaces, and optimization capabilities, making it easier to study and control complex spatiotemporal dynamics across disciplines.
 The code is currently being used by researchers to learn models for battery nanoparticles, optimize phase separation in materials, and control pattern formation in Bose-Einstein condensates.
 In the future, we plan to expand the range of physical systems and PDEs supported by the package and continue advancing numerical methods for differentiable simulation, with the goal of providing an accessible and practical framework for machine learning with PDEs.
 
-# Acknowledgements
+# Acknowledgments
 The authors acknowledge the MIT Office of Research Computing and Data for providing computational resources and advice on open-source scientific computing software.
 
 # References
