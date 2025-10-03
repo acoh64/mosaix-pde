@@ -72,7 +72,8 @@ The Levenberg-Marquardt method requires Jacobians of the residuals for the Hessi
 Since the Levenberg-Marquardt method uses Gauss-Newton approximations of the Hessian, this method generally converges faster than BFGS. 
 However, BFGS does not require the Jacobian of the residuals for the Hessian approximation and thus the gradients can be computed easily using backpropagation, which scales much better with the number of parameters \autoref{fig:benchmark}.
 This tradeoff between scaling with parameter numbers and convergence of optimization must be considered for these differentiable physics optimization problems.
-Finally, the `optimize` method use BFGS minimize a scalar function of the solution, which is specified in the `objective_function` argument.
+Finally, the `optimize` method provides an interface for minimizing a scalar function of the PDE solution.
+The function to minimize is specified through the `objective_function` argument and BFGS is used to perform the optimization.
 ![Benchmarking performance of solvers and gradients with different number of grid points and paramters.\label{fig:benchmark}](figure2_joss.png)
 For reference, we benchmark the performance of numerically solving and computing gradients of PDE solutions \autoref{fig:benchmark}.
 We report the wall time scaling as a function of grid points of 10,000 time steps of the Cahn-Hilliard equation using a semi-implicit Fourier time stepping method, run on both GPU and CPU with Float32 and Float64 precision.
@@ -91,14 +92,14 @@ The episode is simulated by sampling random actions that move the position of th
 
 # Statement of need
 Pattern formation and phase separation are fundamental processes across physics, chemistry, biology, and materials science, with technological applications ranging from developmental biology to nanostructured materials. 
-At the same time, the rapid growth of scientific machine learning has shown how partial differential equation (PDE) models can be combined with modern optimization and learning techniques to accelerate discovery, most prominently in applications such as weather and climate modeling [@kochkov2024] and material modeling [@zhao2020; @zhao2023]. 
+At the same time, the rapid growth of scientific machine learning has shown how partial differential equation (PDE) models can be combined with modern optimization and learning techniques to accelerate discovery, most prominently in applications such as weather and climate modeling [@kochkov2024], material modeling [@zhao2020; @zhao2023], and biophysics [@supekar2023]. 
 Building on these advances, there is growing interest in extending such capabilities to pattern-forming systems, where fast, differentiable, and GPU-accelerated PDE solvers can enable parameter learning, design optimization, and reinforcement learning–based control.
 To support this, the community needs open-source tools that are performant, easy to use, well documented, and straightforward to extend.
 Existing simulation libraries for pattern formation provide valuable tools, but they are often not directly integrated with these machine learning workflows [@walker2023; @burns2020; @zwicker2020; @daubner2025].
 In addition, packages that treat PDEs as reinforcement learning environments are generally restricted to a small set of select equations [@bhan2024; @werner2024].
 Our framework extends this ecosystem by coupling performant PDE solvers with differentiability, RL interfaces, and optimization capabilities, making it easier to study and control complex spatiotemporal dynamics across disciplines.
 The code is currently being used by researchers to learn models for battery nanoparticles, optimize phase separation in materials, and control pattern formation in Bose-Einstein condensates.
-In the future, we plan to broaden the range of physical systems supported by the package and further advance numerical methods for differentiable simulation, with the goal of making machine learning for PDEs framework that is accessible, practical, and easy to use.
+In the future, we plan to expand the range of physical systems and PDEs supported by the package and continue advancing numerical methods for differentiable simulation, with the goal of providing an accessible and practical framework for machine learning with PDEs.
 
 # Acknowledgements
 The authors acknowledge the MIT Office of Research Computing and Data for providing computational resources and advice on open-source scientific computing software.
