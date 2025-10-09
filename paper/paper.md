@@ -36,7 +36,7 @@ The physical laws and dynamics that dictate pattern formation are often expresse
 To learn models for these systems, optimize, control, or apply modern machine learning techniques to these systems, we need fast, differentiable, and GPU-powered numerical solvers.
 
 The `pat-pde-opt` package provides implementations of PDEs that describe pattern formation in a range of physical systems.
-The package also provides a framework for extending the implementation to more PDEs.
+The package also provides a framework for extending the implementation to additional PDEs.
 The code is written in JAX [@jax2018] and is fully differentiable and GPU-accelerated.
 To solve the time-dependent PDEs, `pat-pde-opt` converts the PDEs using the method of lines into a system of ordinary differential equations (ODEs), and evolves the resulting ODEs using `diffrax` [@kidger2021]. 
 Notably, `diffrax` provides binomial checkpointed adjoint methods, which is often essential for differentiating through PDE solves with a large number of time steps, as the memory requirements of backpropagation scales linearly with the number of steps.
@@ -50,7 +50,7 @@ The Domain class sets up the computational region for the simulation, including 
 The Domain also stores the Shape, which is used in the context of the smoothed boundary method.
 The Shape is initialized with a binary mask where 1s indicate the geometry and 0s indicate the empty space.
 Upon initialization, the binary mask is converted to a mask with a smoothly varying shape parameter at the boundary, as required for the smoothed boundary method.
-This smoothing is accomplished by evolving an Allen-Cahn equation with a laplacian term with reduced curvature minimization to maintain sharply curved features of the original shape.
+This smoothing is accomplished by evolving an Allen-Cahn equation with a Laplacian term with reduced curvature minimization to maintain sharply curved features of the original shape.
 The degree of smoothing and curvature minimization can be controlled with hyperparameters.
 The Equation class consists of implementations of the right hand side of the various PDEs with both finite difference and Fourier spectral methods. 
 Each class of PDE is contained in a module, and within each module there exists different implementations of the PDE for different sets of parameters, dimensionality, and other variations.
@@ -66,11 +66,11 @@ In addition, the `train` method provides the utilities for fitting parameters or
 The `train` method uses a multiple shooting approach which is both computationally faster and more robust to noise in the dataset than other approaches.
 The multiple shooting approach works by `vmap`-ing over multiple starting points in the dataset and evaluating the loss at future time points relative to each starting point. 
 The specific starting points and residual evaluation points are specified through the `inds` argument of the `train` function.
-Currently, the optimization can be performed using the Levenberg-Marquardt method or BFGS, whose implementations are provided through the `optimistix` package [@optimistix2024].
-Gradients can be computed using forward or reverse mode automatic differentiation, which scale differently with the number of parameters \autoref{fig:benchmark} [@ma2021].
+Currently, the optimization can be performed using the Levenberg-Marquardt or Broyden-Fletcher-Goldfarb-Shanno (BFGS) algorithms, provided through the `optimistix` package [@optimistix2024].
+Gradients can be computed using forward- or reverse-mode automatic differentiation methods, which scale differently with the number of parameters \autoref{fig:benchmark} [@ma2021].
 The Levenberg-Marquardt method requires Jacobians of the residuals for the Hessian approximation, which can be computed using forward mode automatic differentiation.
 Since the Levenberg-Marquardt method uses Gauss-Newton approximations of the Hessian, this method generally converges faster than BFGS. 
-However, BFGS does not require the Jacobian of the residuals for the Hessian approximation and thus the gradients can be computed easily using backpropagation, which scales much better with the number of parameters \autoref{fig:benchmark}.
+However, BFGS does not require the Jacobian of the residuals for the Hessian approximation, and thus the gradients can be computed easily using backpropagation, which scales much better with the number of parameters \autoref{fig:benchmark}.
 This tradeoff between scaling with parameter numbers and convergence of optimization must be considered for these differentiable physics optimization problems.
 Finally, the `optimize` method provides an interface for minimizing a scalar function of the PDE solution.
 The function to minimize is specified through the `objective_function` argument, and BFGS is used to perform the optimization.
@@ -93,8 +93,8 @@ The episode is simulated by sampling random actions that move the position of th
 
 # Statement of need
 Pattern formation and phase separation are fundamental processes across physics, chemistry, biology, and materials science, with technological applications ranging from developmental biology to nanostructured materials. 
-At the same time, the rapid growth of scientific machine learning has shown how partial differential equation (PDE) models can be combined with modern optimization and learning techniques to accelerate discovery, most prominently in applications such as weather and climate modeling [@kochkov2024], material modeling [@zhao2020; @zhao2023], and biophysics [@supekar2023]. 
-Building on these advances, there is growing interest in extending such capabilities to pattern-forming systems, where fast, differentiable, and GPU-accelerated PDE solvers can enable parameter learning, design optimization, and reinforcement learning–based control.
+At the same time, the rapid growth of scientific machine learning has shown how partial differential equation (PDE) models can be combined with modern optimization and learning techniques to accelerate discovery, most prominently in applications such as material modeling [@zhao2020; @zhao2023], weather and climate modeling [@kochkov2024], and biophysics [@supekar2023]. 
+Building on these advances, there is growing interest in extending such capabilities to ever more complicated pattern-forming systems, where fast, differentiable, and GPU-accelerated PDE solvers can enable parameter learning, design optimization, and reinforcement learning–based control.
 To support this, the community needs open-source tools that are performant, easy to use, well documented, and straightforward to extend.
 Existing simulation libraries for pattern formation provide valuable tools, but are often not directly integrated with these machine learning workflows [@walker2023; @burns2020; @zwicker2020; @daubner2025].
 In addition, packages that treat PDEs as reinforcement learning environments are generally restricted to a small set of select equations [@bhan2024; @werner2024].

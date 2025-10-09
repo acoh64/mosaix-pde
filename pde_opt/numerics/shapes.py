@@ -25,6 +25,8 @@ class Shape:
     """
 
     binary: Array
+    refine_factor: Optional[float] = None
+    refine_edge: Optional[float] = None
     dx: Optional[Tuple[float, float]] = (1.0, 1.0)
     smooth_epsilon: float = 1.0
     smooth_curvature: float = 0.0
@@ -32,9 +34,71 @@ class Shape:
     smooth_tf: float = 1.0
 
     def __post_init__(self):
+        # Refine binary mask if parameters are provided
+        if self.refine_factor is not None or self.refine_edge is not None:
+            self.binary = self.refine_binary_mask()
+        
         self.smooth = self.smooth_shape()
         self.smooth = jnp.where(self.smooth < 0.001, 0.001, self.smooth)
         self.smooth = jnp.where(self.smooth > 0.99, 1.0, self.smooth)
+
+    def refine_binary_mask(self) -> Array:
+        """Refine the binary mask by upsampling and adding edge padding.
+        
+        Args:
+            refine_factor: Factor by which to upsample the binary mask (e.g., 2.0 for 2x upsampling)
+            refine_edge: Percentage to increase the edges (e.g., 0.5 for 50% increase)
+            
+        Returns:
+            Refined binary mask with upsampling and edge padding applied
+        """
+        binary = self.binary
+        
+        # Step 1: Upsample by refine_factor if specified
+        if self.refine_factor is not None and self.refine_factor != 1.0:
+            # Convert to numpy for scipy interpolation
+            binary_np = np.array(binary)
+            h, w = binary_np.shape
+            
+            # Calculate new dimensions
+            new_h = int(h * self.refine_factor)
+            new_w = int(w * self.refine_factor)
+            
+            # Create coordinate grids
+            y_old = np.linspace(0, h-1, h)
+            x_old = np.linspace(0, w-1, w)
+            y_new = np.linspace(0, h-1, new_h)
+            x_new = np.linspace(0, w-1, new_w)
+            
+            # Create meshgrids
+            X_old, Y_old = np.meshgrid(x_old, y_old)
+            X_new, Y_new = np.meshgrid(x_new, y_new)
+            
+            # Interpolate using nearest neighbor to preserve binary nature
+            from scipy.interpolate import griddata
+            points = np.column_stack((Y_old.ravel(), X_old.ravel()))
+            values = binary_np.ravel()
+            binary = griddata(points, values, (Y_new, X_new), method='nearest', fill_value=0.0)
+            binary = jnp.array(binary)
+        
+        # Step 2: Add edge padding if specified
+        if self.refine_edge is not None and self.refine_edge > 0.0:
+            h, w = binary.shape
+            
+            # Calculate padding size based on percentage increase
+            pad_h = int(h * self.refine_edge)
+            pad_w = int(w * self.refine_edge)
+            
+            # Create new array with padding (filled with zeros/black)
+            new_h = h + 2 * pad_h
+            new_w = w + 2 * pad_w
+            padded_binary = jnp.zeros((new_h, new_w))
+            
+            # Place the upsampled binary in the center
+            padded_binary = padded_binary.at[pad_h:pad_h+h, pad_w:pad_w+w].set(binary)
+            binary = padded_binary
+        
+        return binary
 
     def smooth_shape(self) -> Array:
         """Smooths the shape using the Allen-Cahn equation with curvature minimization."""
