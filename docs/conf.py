@@ -14,12 +14,12 @@ import os
 import sys
 
 sys.path.insert(0, os.path.abspath(".."))
-sys.path.append(os.path.abspath("../pde_opt"))
+sys.path.append(os.path.abspath("../mosaix_pde"))
 
 
 # -- Project information -----------------------------------------------------
 
-project = "pde_opt"
+project = "mosaix_pde"
 copyright = "2025, Alexander E Cohen"
 author = "Alexander E Cohen"
 
@@ -118,7 +118,7 @@ html_favicon = "logo.png"
 html_context = {
     "display_github": True,
     "github_user": "acoh64",  # Update with your GitHub username
-    "github_repo": "pde-opt",  # Update with your repository name
+    "github_repo": "mosaix-pde",  # Update with your repository name
     "github_version": "main",
     "conf_py_path": "/docs/",
 }

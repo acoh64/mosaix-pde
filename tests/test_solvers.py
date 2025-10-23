@@ -3,15 +3,15 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 
-from pde_opt.numerics.domains import Domain
-from pde_opt.numerics.equations import (
+from mosaix_pde.numerics.domains import Domain
+from mosaix_pde.numerics.equations import (
     CahnHilliard2DPeriodic,
     AllenCahn2DPeriodic,
     GPE2DTSControl,
 )
-from pde_opt.numerics.utils.initialization_utils import initialize_Psi
-from pde_opt.numerics.solvers import SemiImplicitFourierSpectral, StrangSplitting
-from pde_opt import PDEModel
+from mosaix_pde.numerics.utils.initialization_utils import initialize_Psi
+from mosaix_pde.numerics.solvers import SemiImplicitFourierSpectral, StrangSplitting
+from mosaix_pde import PDEModel
 
 # Force JAX to use CPU for tests
 jax.config.update("jax_platforms", "cpu")

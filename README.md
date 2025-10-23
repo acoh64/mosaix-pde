@@ -1,22 +1,22 @@
-<img src="https://raw.githubusercontent.com/acoh64/pde-opt/main/docs/logo.png" width="200em" align="right" />
+<img src="https://raw.githubusercontent.com/acoh64/mosaix-pde/main/docs/logo.png" width="200em" align="right" />
 
-# pat-pde-opt
+# mosaix-pde
 
-`pat-pde-opt` is a package for optimizing pattern forming PDEs that appear in different areas of physics, written in [JAX](https://github.com/jax-ml/jax). 
+`mosaix-pde` is a package for optimizing pattern forming PDEs that appear in different areas of physics, written in [JAX](https://github.com/jax-ml/jax). 
 It has code for PDE optimization and control with gradient-based methods and reinforcement learning.
 We use [diffrax](https://github.com/patrick-kidger/diffrax) for time stepping and implement system-specific solvers, such as semi-implicit Fourier methods and Strang splitting.
 
-You can find the full documentation on [read the docs](https://pde-opt.readthedocs.io).
+You can find the full documentation on [read the docs](https://mosaix-pde.readthedocs.io).
 
 ## Installation
 
 To install the package, we recommend cloning the github repo and then installing locally:
 
 ```bash
-git clone https://github.com/acoh64/pde-opt.git
-cd pde-opt
-conda create -y -n pde-opt-env python=3.12
-conda activate pde-opt-env
+git clone https://github.com/acoh64/mosaix-pde.git
+cd mosaix-pde
+conda create -y -n mosaix-pde-env python=3.12
+conda activate mosaix-pde-env
 pip install -e .
 ```
 
@@ -34,11 +34,11 @@ Here is an example of solving the Cahn-Hilliard equation in 2D with periodic bou
 import jax
 import jax.numpy as jnp
 
-from pde_opt import PDEModel
-from pde_opt import CahnHilliard2DPeriodic
-from pde_opt import SemiImplicitFourierSpectral
-from pde_opt import Domain
-from pde_opt import PeriodicCNN
+from mosaix_pde import PDEModel
+from mosaix_pde import CahnHilliard2DPeriodic
+from mosaix_pde import SemiImplicitFourierSpectral
+from mosaix_pde import Domain
+from mosaix_pde import PeriodicCNN
 
 Nx = Ny = 128
 Lx = Ly = 0.01 * Nx

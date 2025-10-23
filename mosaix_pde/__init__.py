@@ -1,4 +1,4 @@
-"""Public API for pde_opt."""
+"""Public API for mosaix_pde."""
 
 # Core PDE model and environment
 from .pde_model import PDEModel

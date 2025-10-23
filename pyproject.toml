@@ -3,9 +3,9 @@ requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "pde_opt"
+name = "mosaix_pde"
 version = "0.1.0"
-description = "Library for PDE optimization and control with gradient-based methods and reinforcement learning"
+description = "Library for PDE learning, optimization, and control with gradient-based methods and reinforcement learning"
 authors = [
     { name = "Alexander E Cohen", email = "aecohen@mit.edu" }
 ]
@@ -34,7 +34,7 @@ dev = [
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["pde_opt*"]
+include = ["mosaix_pde*"]
 
 [tool.ruff]
 exclude = ["notebooks"]

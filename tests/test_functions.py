@@ -3,7 +3,7 @@ import jax.numpy as jnp
 import numpy as np
 from numpy.polynomial.legendre import legval
 
-from pde_opt.numerics.functions import (
+from mosaix_pde.numerics.functions import (
     LegendrePolynomialExpansion,
     DiffusionLegendrePolynomials,
     ChemicalPotentialLegendrePolynomials,

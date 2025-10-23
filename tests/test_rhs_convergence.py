@@ -2,10 +2,10 @@ import numpy as np
 import sympy as sp
 import jax
 
-from pde_opt.numerics.equations import AllenCahn2DPeriodic, CahnHilliard2DPeriodic
-from pde_opt.numerics.symbolic.allen_cahn_sym import SymbolicAllenCahn2DPeriodic
-from pde_opt.numerics.symbolic.cahn_hilliard_sym import SymbolicCahnHilliard2DPeriodic
-from pde_opt.numerics.utils.testing import check_convergence
+from mosaix_pde.numerics.equations import AllenCahn2DPeriodic, CahnHilliard2DPeriodic
+from mosaix_pde.numerics.symbolic.allen_cahn_sym import SymbolicAllenCahn2DPeriodic
+from mosaix_pde.numerics.symbolic.cahn_hilliard_sym import SymbolicCahnHilliard2DPeriodic
+from mosaix_pde.numerics.utils.testing import check_convergence
 
 jax.config.update("jax_platforms", "cpu")
 jax.config.update("jax_enable_x64", True)

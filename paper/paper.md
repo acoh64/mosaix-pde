@@ -1,5 +1,5 @@
 ---
-title: 'pat-pde-opt: Differentiable pattern-forming PDEs for machine learning, optimization, and control'
+title: 'mosaix-pde: Differentiable pattern-forming PDEs for machine learning, optimization, and control'
 tags:
   - Python
   - JAX
@@ -35,16 +35,16 @@ Pattern formation occurs in diverse physical systems across many length scales, 
 The physical laws and dynamics that dictate pattern formation are often expressed in the form of partial differential equations (PDEs).
 To learn models for these systems, optimize, control, or apply modern machine learning techniques to these systems, we need fast, differentiable, and GPU-powered numerical solvers.
 
-The `pat-pde-opt` package provides implementations of PDEs that describe pattern formation in a range of physical systems.
+The `mosaix-pde` package provides implementations of PDEs that describe pattern formation in a range of physical systems.
 The package also provides a framework for extending the implementation to additional PDEs.
 The code is written in JAX [@jax2018] and is fully differentiable and GPU-accelerated.
-To solve the time-dependent PDEs, `pat-pde-opt` converts the PDEs using the method of lines into a system of ordinary differential equations (ODEs), and evolves the resulting ODEs using `diffrax` [@kidger2021]. 
+To solve the time-dependent PDEs, `mosaix-pde` converts the PDEs using the method of lines into a system of ordinary differential equations (ODEs), and evolves the resulting ODEs using `diffrax` [@kidger2021]. 
 Notably, `diffrax` provides binomial checkpointed adjoint methods, which is often essential for differentiating through PDE solves with a large number of time steps, as the memory requirements of backpropagation scales linearly with the number of steps.
-`pat-pde-opt` also provides implementations of specialized time stepping methods for many pattern forming systems, including semi-implicit Fourier methods [@zhu1999], Strang splitting [@bao2012], and the stabilized explicit Runge-Kutta method ROCK2 [@abdulle2001].
+`mosaix-pde` also provides implementations of specialized time stepping methods for many pattern forming systems, including semi-implicit Fourier methods [@zhu1999], Strang splitting [@bao2012], and the stabilized explicit Runge-Kutta method ROCK2 [@abdulle2001].
 For simple support for non-regular geometries, some PDEs are implemented using the smoothed boundary method for complex geometries [@yu2012].
 The goal of this package is to provide specialized code for the integration of physical simulations of pattern formation with inverse design, optimization, machine learning, and control. 
 
-The `pat-pde-opt` package is organized around Domains, Equations, and Solvers \autoref{fig:overview}.
+The `mosaix-pde` package is organized around Domains, Equations, and Solvers \autoref{fig:overview}.
 ![Code structure enables Equation, Domain, and Solver modules to be combined to build PDE models for machine learning applications.\label{fig:overview}](figure1_joss.png){ width=50% }
 The Domain class sets up the computational region for the simulation, including the mesh and axes in both real and Fourier space.
 The Domain also stores the Shape, which is used in the context of the smoothed boundary method.
@@ -57,7 +57,7 @@ Each class of PDE is contained in a module, and within each module there exists 
 Parameters for the PDEs can in general be `Equinox` modules [@kidger2021equinox], making it easy to take gradients with respect to the parameters regardless of the type of function using filter or partition transformations.
 Several useful functions that can be used as PDE parameters are provided as `Equinox` modules in the functions module, including periodic CNNs and Legendre polynomial expansions.
 The solvers are subclasses of `diffrax.AbstractSolver` and provide implementations of specialized time stepping methods for specific PDEs.
-The specification of a Domain, Equation, and a Solver is required for all downstream use cases of `pat-pde-opt`.
+The specification of a Domain, Equation, and a Solver is required for all downstream use cases of `mosaix-pde`.
 
 Two interfaces are provided through the `PDEModel` and `PDEEnv` class for integrating with machine learning methods.
 The `PDEModel` is initialized with a combination of a Domain, Equation, and Solver, and provides three main methods.
