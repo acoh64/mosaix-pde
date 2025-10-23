@@ -112,3 +112,12 @@ We have currently implemented variants of the following equations:
 ## License
 
 This code has been published under the MIT licence.
+
+## Acknowledgments
+This project builds on the excellent JAX ecosystem for scientific computing.
+We gratefully acknowledge the following open-source libraries:
+- [Diffrax](https://github.com/patrick-kidger/diffrax)
+- [Optimistix](https://github.com/patrick-kidger/optimistix)
+- [Equinox](https://github.com/patrick-kidger/equinox)
+
+We especially thank [Patrick Kidger](https://github.com/patrick-kidger) for developing amazing JAX software.
