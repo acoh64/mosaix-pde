@@ -1,4 +1,4 @@
-<img src="https://raw.githubusercontent.com/acoh64/mosaix-pde/main/docs/logo.png" width="200em" align="right" />
+<img src="https://raw.githubusercontent.com/acoh64/mosaix-pde/main/docs/logo.png" width="400em" align="right" />
 
 # mosaix-pde
 
