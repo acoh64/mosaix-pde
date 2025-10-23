@@ -26,7 +26,7 @@ affiliations:
    index: 1
  - name: Imperial College London, United Kingdom
    index: 2
-date: 01 October 2025
+date: 22 October 2025
 bibliography: paper.bib
 ---
 
@@ -45,7 +45,9 @@ For simple support for non-regular geometries, some PDEs are implemented using t
 The goal of this package is to provide specialized code for the integration of physical simulations of pattern formation with inverse design, optimization, machine learning, and control. 
 
 The `mosaix-pde` package is organized around Domains, Equations, and Solvers \autoref{fig:overview}.
-![Code structure enables Equation, Domain, and Solver modules to be combined to build PDE models for machine learning applications.\label{fig:overview}](figure1_joss.png){ width=50% }
+
+![Code structure enables Equation, Domain, and Solver modules to be combined to build PDE models for machine learning applications.\label{fig:overview}](figure1_joss.png)
+
 The Domain class sets up the computational region for the simulation, including the mesh and axes in both real and Fourier space.
 The Domain also stores the Shape, which is used in the context of the smoothed boundary method.
 The Shape is initialized with a binary mask where 1s indicate the geometry and 0s indicate the empty space.
@@ -74,6 +76,7 @@ However, BFGS does not require the Jacobian of the residuals for the Hessian app
 This tradeoff between scaling with parameter numbers and convergence of optimization must be considered for these differentiable physics optimization problems.
 Finally, the `optimize` method provides an interface for minimizing a scalar function of the PDE solution.
 The function to minimize is specified through the `objective_function` argument, and BFGS is used to perform the optimization.
+
 ![Benchmarking performance of solvers and gradients with different number of grid points and parameters.\label{fig:benchmark}](figure2_joss.png)
 
 For reference, we benchmark the performance of numerically solving and computing gradients of PDE solutions \autoref{fig:benchmark}.
@@ -86,7 +89,9 @@ The `PDEEnv` class is useful for turning a PDE into a `Gymnasium`-registered rei
 In addition to the Domain, Equation, and Solver, the `PDEEnv` class requires a `step_dt`, which is the time span of one step of the environment, and a `numeric_dt` which is the time step to use for numerical integration. 
 These are separate parameters because the reaction time of the agent is often larger than the time step needed for numerical stability.
 Beyond these fields, many other pieces of information must be provided to form the RL environment, including reward functions, observation functions, and reset functions.
+
 ![Single episode of an RL environment created from the Gross-Pitaevskii equation.\label{fig:rl_env}](figure3_joss.png)
+
 We demonstrate an example of creating an RL environment designed to form vortices in a Bose-Einstein condensate by controlling the position of an external laser source \autoref{fig:rl_env}.
 The episode is simulated by sampling random actions that move the position of the laser (red line), where the reward is calculated by counting the number of vortices in the condensate (black and white circles).
 
