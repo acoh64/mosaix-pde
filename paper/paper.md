@@ -85,7 +85,7 @@ We further show the wall time scaling with respect to the number of parameters w
 Finally, we compare a Tsit5 time stepper with our ROCK2 implementation and semi-implicit Fourier method, all coupled with a PID step size controller for the Cahn-Hilliard equation.
 `PDEModel` streamlines model learning and optimization by unifying a Domain, Equation, and Solver.
 
-The `PDEEnv` class is useful for turning a PDE into a `Gymnasium`-registered reinforcement learning (RL) environment that can be used to train RL agents with libraries like Stable Baselines [@towers2024; raffin2021].
+The `PDEEnv` class is useful for turning a PDE into a `Gymnasium`-registered reinforcement learning (RL) environment that can be used to train RL agents with libraries like Stable Baselines [@towers2024; @raffin2021].
 In addition to the Domain, Equation, and Solver, the `PDEEnv` class requires a `step_dt`, which is the time span of one step of the environment, and a `numeric_dt` which is the time step to use for numerical integration. 
 These are separate parameters because the reaction time of the agent is often larger than the time step needed for numerical stability.
 Beyond these fields, many other pieces of information must be provided to form the RL environment, including reward functions, observation functions, and reset functions.
