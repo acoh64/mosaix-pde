@@ -101,6 +101,12 @@ We have currently implemented variants of the following equations:
   - Reduced 2D with periodic boundary conditions
   - Rotating reduced with 2D periodic boundary conditions
 
+## Running Tests
+To run the tests in the `tests/` directory, run 
+```bash
+pytest tests/
+```
+
 ## TODO
 
 - [ ] Arbitrary boundary conditions
