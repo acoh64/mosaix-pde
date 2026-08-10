@@ -44,6 +44,19 @@ Notably, `diffrax` provides binomial checkpointed adjoint methods, which is ofte
 For simple support for non-regular geometries, some PDEs are implemented using the smoothed boundary method for complex geometries [@yu2012].
 The goal of this package is to provide specialized code for the integration of physical simulations of pattern formation with inverse design, optimization, machine learning, and control. 
 
+# Statement of need
+Pattern formation and phase separation are fundamental processes across physics, chemistry, biology, and materials science, with technological applications ranging from developmental biology to nanostructured materials.
+At the same time, the rapid growth of scientific machine learning has shown how partial differential equation (PDE) models can be combined with modern optimization and learning techniques to accelerate discovery, most prominently in applications such as material modeling [@zhao2020; @zhao2023], weather and climate modeling [@kochkov2024], and biophysics [@supekar2023].
+Building on these advances, there is growing interest in extending such capabilities to ever more complicated pattern-forming systems, where fast, differentiable, and GPU-accelerated PDE solvers can enable parameter learning, design optimization, and reinforcement learning–based control.
+To support this, the community needs open-source tools that are performant, easy to use, well documented, and straightforward to extend.
+Existing simulation libraries for pattern formation provide valuable tools, but are often not directly integrated with these machine learning workflows [@walker2023; @burns2020; @zwicker2020; @daubner2025].
+In addition, packages that treat PDEs as reinforcement learning environments are generally restricted to a small set of select equations [@bhan2024; @werner2024].
+Our framework extends this ecosystem by coupling performant PDE solvers with differentiability, RL interfaces, and optimization capabilities, making it easier to study and control complex spatiotemporal dynamics across disciplines.
+The primary intended users of `mosaix-pde` are computational researchers in physics, materials science, and biophysics who study pattern-forming or phase-separating systems and want to combine time-dependent PDE simulations with parameter inference, inverse design, optimization, or control.
+Researchers in other domains may extend the modular `Equation`, `Domain`, and `Solver` interfaces.
+The code is currently being used by researchers to learn models for battery nanoparticles, optimize phase separation in materials, and control pattern formation in Bose-Einstein condensates.
+In the future, we plan to expand the range of physical systems and PDEs supported by the package and continue advancing numerical methods for differentiable simulation, with the goal of providing an accessible and practical framework for machine learning with PDEs.
+
 The `mosaix-pde` package is organized around Domains, Equations, and Solvers \autoref{fig:overview}.
 
 ![Code structure enables Equation, Domain, and Solver modules to be combined to build PDE models for machine learning applications.\label{fig:overview}](figure1_joss.png)
@@ -94,20 +107,6 @@ Beyond these fields, many other pieces of information must be provided to form t
 
 We demonstrate an example of creating an RL environment designed to form vortices in a Bose-Einstein condensate by controlling the position of an external laser source \autoref{fig:rl_env}.
 The episode is simulated by sampling random actions that move the position of the laser (red line), where the reward is calculated by counting the number of vortices in the condensate (black and white circles).
-
-
-# Statement of need
-Pattern formation and phase separation are fundamental processes across physics, chemistry, biology, and materials science, with technological applications ranging from developmental biology to nanostructured materials. 
-At the same time, the rapid growth of scientific machine learning has shown how partial differential equation (PDE) models can be combined with modern optimization and learning techniques to accelerate discovery, most prominently in applications such as material modeling [@zhao2020; @zhao2023], weather and climate modeling [@kochkov2024], and biophysics [@supekar2023]. 
-Building on these advances, there is growing interest in extending such capabilities to ever more complicated pattern-forming systems, where fast, differentiable, and GPU-accelerated PDE solvers can enable parameter learning, design optimization, and reinforcement learning–based control.
-To support this, the community needs open-source tools that are performant, easy to use, well documented, and straightforward to extend.
-Existing simulation libraries for pattern formation provide valuable tools, but are often not directly integrated with these machine learning workflows [@walker2023; @burns2020; @zwicker2020; @daubner2025].
-In addition, packages that treat PDEs as reinforcement learning environments are generally restricted to a small set of select equations [@bhan2024; @werner2024].
-Our framework extends this ecosystem by coupling performant PDE solvers with differentiability, RL interfaces, and optimization capabilities, making it easier to study and control complex spatiotemporal dynamics across disciplines.
-The primary intended users of `mosaix-pde` are computational researchers in physics, materials science, and biophysics who study pattern-forming or phase-separating systems and want to combine time-dependent PDE simulations with parameter inference, inverse design, optimization, or control.
-Researchers in other domains may extend the modular `Equation`, `Domain`, and `Solver` interfaces.
-The code is currently being used by researchers to learn models for battery nanoparticles, optimize phase separation in materials, and control pattern formation in Bose-Einstein condensates.
-In the future, we plan to expand the range of physical systems and PDEs supported by the package and continue advancing numerical methods for differentiable simulation, with the goal of providing an accessible and practical framework for machine learning with PDEs.
 
 # Acknowledgments
 The authors acknowledge the MIT Office of Research Computing and Data for providing computational resources and advice on open-source scientific computing software.
