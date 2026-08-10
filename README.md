@@ -10,14 +10,25 @@ You can find the full documentation on [read the docs](https://mosaix-pde.readth
 
 ## Installation
 
-To install the package, we recommend cloning the github repo and then installing locally:
+`mosaix-pde` requires Python 3.10 or later. Clone the repository and install
+the package in a Conda environment:
 
 ```bash
 git clone https://github.com/acoh64/mosaix-pde.git
 cd mosaix-pde
 conda create -y -n mosaix-pde-env python=3.12
 conda activate mosaix-pde-env
-pip install -e .
+python -m pip install -e .
+```
+
+Alternatively, Python's built-in `venv` can be used after cloning the
+repository:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+python -m pip install --upgrade pip
+python -m pip install -e .
 ```
 
 By default, it will install the CPU version of JAX.
