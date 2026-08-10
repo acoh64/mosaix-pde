@@ -104,6 +104,8 @@ To support this, the community needs open-source tools that are performant, easy
 Existing simulation libraries for pattern formation provide valuable tools, but are often not directly integrated with these machine learning workflows [@walker2023; @burns2020; @zwicker2020; @daubner2025].
 In addition, packages that treat PDEs as reinforcement learning environments are generally restricted to a small set of select equations [@bhan2024; @werner2024].
 Our framework extends this ecosystem by coupling performant PDE solvers with differentiability, RL interfaces, and optimization capabilities, making it easier to study and control complex spatiotemporal dynamics across disciplines.
+The primary intended users of `mosaix-pde` are computational researchers in physics, materials science, and biophysics who study pattern-forming or phase-separating systems and want to combine time-dependent PDE simulations with parameter inference, inverse design, optimization, or control.
+Researchers in other domains may extend the modular `Equation`, `Domain`, and `Solver` interfaces.
 The code is currently being used by researchers to learn models for battery nanoparticles, optimize phase separation in materials, and control pattern formation in Bose-Einstein condensates.
 In the future, we plan to expand the range of physical systems and PDEs supported by the package and continue advancing numerical methods for differentiable simulation, with the goal of providing an accessible and practical framework for machine learning with PDEs.
 
