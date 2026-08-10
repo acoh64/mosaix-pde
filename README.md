@@ -37,6 +37,20 @@ To use with GPU, run:
 pip install -U "jax[cuda12]"
 ```
 
+## Examples and tutorials
+
+Standalone Python examples are available in the [`examples/`](examples/)
+directory. Each tutorial notebook in [`docs/notebooks/`](docs/notebooks/) has a
+corresponding script that can be run outside Jupyter. The notebooks are the primary
+step-by-step tutorials and are also rendered in the
+[online documentation](https://mosaix-pde.readthedocs.io/), while the scripts are
+convenient for running and adapting complete examples.
+
+The full workflow shown in the Usage section below is available as
+[`examples/readme_example.py`](examples/readme_example.py). See the
+[`examples` index](examples/README.md) for a description of every script and its
+corresponding notebook.
+
 ## Usage
 
 Here is an example of solving the Cahn-Hilliard equation in 2D with periodic boundary conditions using a semi-implicit Fourier method:
