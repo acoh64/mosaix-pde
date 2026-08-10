@@ -1,14 +1,14 @@
-from typing import Type, Dict, Any
+from functools import partial
+from typing import Any
 
 import diffrax as dfx
+import equinox as eqx
 import jax
 import jax.numpy as jnp
 import optimistix as optx
-from functools import partial
-import equinox as eqx
 
-from .numerics.equations import BaseEquation
 from .numerics import domains
+from .numerics.equations import BaseEquation
 from .utils import check_equation_solver_compatibility, prepare_solver_params
 
 
@@ -36,9 +36,9 @@ class PDEModel:
 
     def __init__(
         self,
-        equation_type: Type[BaseEquation],
+        equation_type: type[BaseEquation],
         domain: domains.Domain,
-        solver_type: Type[dfx.AbstractSolver],
+        solver_type: type[dfx.AbstractSolver],
     ):
         """Initialize the PDE optimization model.
 
@@ -67,14 +67,14 @@ class PDEModel:
 
     def solve(
         self,
-        parameters: Dict[str, Any],
+        parameters: dict[str, Any],
         y0,
         ts,
-        solver_parameters: Dict[str, Any] = {},
-        adjoint=dfx.ForwardMode(),
+        solver_parameters: dict[str, Any] | None = None,
+        adjoint=None,
         dt0=0.000001,
         max_steps=1000000,
-        stepsize_controller=dfx.ConstantStepSize(),
+        stepsize_controller=None,
     ):
         """Solve the PDE with given parameters and initial conditions.
 
@@ -105,6 +105,13 @@ class PDEModel:
         Returns:
             Solution array with shape (len(ts), *y0.shape).
         """
+
+        if solver_parameters is None:
+            solver_parameters = {}
+        if adjoint is None:
+            adjoint = dfx.ForwardMode()
+        if stepsize_controller is None:
+            stepsize_controller = dfx.ConstantStepSize()
 
         # Initialize the equation with the given parameters
         equation = self.equation_type(domain=self.domain, **parameters)
@@ -142,7 +149,7 @@ class PDEModel:
         y0,
         values,
         ts,
-        adjoint=dfx.ForwardMode(),
+        adjoint=None,
     ):
         """Compute residuals for a single trajectory.
 
@@ -163,6 +170,9 @@ class PDEModel:
             Residuals array with shape (timepoints, *y0.shape).
                 The residuals are computed as: values - predicted[1:] (values should not include the initial condition).
         """
+        if adjoint is None:
+            adjoint = dfx.ForwardMode()
+
         pred = self.solve(parameters, y0, ts, solver_parameters, adjoint=adjoint)
         data_residual = (
             values - pred[1:]
@@ -209,7 +219,7 @@ class PDEModel:
                 return jax.numpy.sum(w * v**2)
             return 0.0
 
-        for key in weights.keys():
+        for key in weights:
             # Use tree_map to handle nested structures within this key
             reg += lambda_reg * jax.tree_util.tree_reduce(
                 jax.numpy.add,
@@ -231,7 +241,7 @@ class PDEModel:
         ts,
         weights,
         lambda_reg,
-        adjoint=dfx.ForwardMode(),
+        adjoint=None,
     ):
         """Compute batched residuals and regularization for parameter optimization.
 
@@ -259,6 +269,9 @@ class PDEModel:
                 - reg: Scalar regularization term
         """
 
+        if adjoint is None:
+            adjoint = dfx.ForwardMode()
+
         y0s, values = y0s__values
         single = partial(
             self.residual_single, parameters, solver_parameters, ts=ts, adjoint=adjoint
@@ -279,7 +292,7 @@ class PDEModel:
         ts,
         weights,
         lambda_reg,
-        adjoint=dfx.RecursiveCheckpointAdjoint(),
+        adjoint=None,
     ):
         """Compute the mean squared error loss for parameter optimization.
 
@@ -309,6 +322,9 @@ class PDEModel:
         Returns:
             float: Mean squared error loss including regularization term.
         """
+
+        if adjoint is None:
+            adjoint = dfx.RecursiveCheckpointAdjoint()
 
         batch_residuals, reg = self.residuals(
             parameters,

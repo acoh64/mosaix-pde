@@ -3,7 +3,7 @@ This module contains various Gross-Pitaevskii equation classes.
 """
 
 import dataclasses
-from typing import Callable
+from collections.abc import Callable
 
 import jax.numpy as jnp
 

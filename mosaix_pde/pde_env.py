@@ -1,13 +1,15 @@
+from collections.abc import Callable
+from typing import Any
+
+import diffrax
 import gymnasium as gym
+import jax
+import numpy as np
 from gymnasium import spaces
 from gymnasium.envs.registration import register
-import numpy as np
-import diffrax
-import jax
-from typing import Callable, Optional, Type, Dict, Any
 
-from .numerics.equations import BaseEquation
 from .numerics import domains
+from .numerics.equations import BaseEquation
 from .utils import check_equation_solver_compatibility, prepare_solver_params
 
 # TODO: create RL environments that can control multiple parameters at once.
@@ -42,9 +44,9 @@ class PDEEnv(gym.Env):
 
     def __init__(
         self,
-        equation_type: Type[BaseEquation],
+        equation_type: type[BaseEquation],
         domain: domains.Domain,
-        solver_type: Type[diffrax.AbstractSolver],
+        solver_type: type[diffrax.AbstractSolver],
         end_time: float,
         step_dt: float,
         numeric_dt: float,
@@ -54,10 +56,10 @@ class PDEEnv(gym.Env):
         reset_control_value,
         update_control_value: Callable,
         update_control_parameter: Callable,
-        action_space_config: Dict[str, Any],
-        static_equation_parameters: Dict[str, Any],
+        action_space_config: dict[str, Any],
+        static_equation_parameters: dict[str, Any],
         control_equation_parameter_name: str,
-        solver_parameters: Dict[str, Any],
+        solver_parameters: dict[str, Any],
     ):
         """Initialize the PDE reinforcement learning environment.
 
@@ -137,7 +139,7 @@ class PDEEnv(gym.Env):
 
         self.solver_parameters = solver_parameters
 
-    def _setup_action_space(self, config: Dict[str, Any]):
+    def _setup_action_space(self, config: dict[str, Any]):
         """Set up the action space based on configuration.
 
         This method configures the action space for the RL environment based on the
@@ -214,7 +216,7 @@ class PDEEnv(gym.Env):
         """
         return self._time >= self.end_time
 
-    def reset(self, seed: Optional[int] = None, options: Optional[dict] = None):
+    def reset(self, seed: int | None = None, options: dict | None = None):
         """Reset the environment to initial state.
 
         This method resets the PDE environment to its initial state, generating new

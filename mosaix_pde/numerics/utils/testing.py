@@ -2,9 +2,10 @@
 This module contains helper functions for testing the PDEs.
 """
 
-import numpy as np
+
 import matplotlib.pyplot as plt
-from typing import Type
+import numpy as np
+
 from ..domains import Domain
 from ..equations.base_eq import BaseEquation
 from ..symbolic.base_sym_eq import BaseSymbolicEquation
@@ -18,8 +19,8 @@ def l2_rel_err(numeric, symbolic):
 
 
 def check_convergence(
-    numeric: Type[BaseEquation],
-    symbolic: Type[BaseSymbolicEquation],
+    numeric: type[BaseEquation],
+    symbolic: type[BaseSymbolicEquation],
     numeric_args,
     symbolic_args,
     Ns,

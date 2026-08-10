@@ -1,10 +1,12 @@
+import jax
 import numpy as np
 import sympy as sp
-import jax
 
 from mosaix_pde.numerics.equations import AllenCahn2DPeriodic, CahnHilliard2DPeriodic
 from mosaix_pde.numerics.symbolic.allen_cahn_sym import SymbolicAllenCahn2DPeriodic
-from mosaix_pde.numerics.symbolic.cahn_hilliard_sym import SymbolicCahnHilliard2DPeriodic
+from mosaix_pde.numerics.symbolic.cahn_hilliard_sym import (
+    SymbolicCahnHilliard2DPeriodic,
+)
 from mosaix_pde.numerics.utils.testing import check_convergence
 
 jax.config.update("jax_platforms", "cpu")

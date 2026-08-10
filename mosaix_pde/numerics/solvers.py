@@ -14,10 +14,11 @@ All solvers inherit from diffrax.AbstractSolver and are compatible with the
 diffrax integration framework.
 """
 
+from collections.abc import Callable
+
 import diffrax as dfx
 import jax
 import jax.numpy as jnp
-from typing import Callable
 
 
 class SemiImplicitFourierSpectral(dfx.AbstractSolver):
@@ -39,7 +40,7 @@ class SemiImplicitFourierSpectral(dfx.AbstractSolver):
         60.4 (1999): 3564.
     """
 
-    required_equation_attrs = ["fourier_symbol", "fft", "ifft"]
+    required_equation_attrs = ("fourier_symbol", "fft", "ifft")
     A: float
     fourier_symbol: jax.Array
     fft: Callable
@@ -63,7 +64,7 @@ class SemiImplicitFourierSpectral(dfx.AbstractSolver):
         y1 = y0 + δt * self.ifft(self.fft(f0) / tmp).real
 
         y_error = y1 - euler_y1
-        dense_info = dict(y0=y0, y1=y1)
+        dense_info = {"y0": y0, "y1": y1}
 
         solver_state = None
         result = dfx.RESULTS.successful
@@ -81,7 +82,7 @@ class StrangSplitting(dfx.AbstractSolver):
         Bose-Einstein condensation." arXiv preprint arXiv:1212.5341 (2012).
     """
 
-    required_equation_attrs = ["A_term", "dx", "fft", "ifft"]
+    required_equation_attrs = ("A_term", "dx", "fft", "ifft")
     A_term: jax.Array
     dx: float
     fft: Callable
@@ -115,7 +116,7 @@ class StrangSplitting(dfx.AbstractSolver):
         y1 = jnp.stack([y1_.real, y1_.imag], axis=-1)
         # TODO: I should be able to change order and reduce number of ffts
 
-        dense_info = dict(y0=y0, y1=y1)
+        dense_info = {"y0": y0, "y1": y1}
 
         solver_state = None
         result = dfx.RESULTS.successful

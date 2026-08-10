@@ -2,16 +2,16 @@
 
 from .cnn import PeriodicCNN
 from .legendre import (
-    LegendrePolynomialExpansion,
-    DiffusionLegendrePolynomials,
     ChemicalPotentialLegendrePolynomials,
+    DiffusionLegendrePolynomials,
+    LegendrePolynomialExpansion,
 )
 from .mixer_mlp import Mixer2d
 
 __all__ = [
-    "PeriodicCNN",
-    "LegendrePolynomialExpansion",
-    "DiffusionLegendrePolynomials",
     "ChemicalPotentialLegendrePolynomials",
+    "DiffusionLegendrePolynomials",
+    "LegendrePolynomialExpansion",
     "Mixer2d",
+    "PeriodicCNN",
 ]

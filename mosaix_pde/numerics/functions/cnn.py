@@ -2,10 +2,11 @@
 This module contains a periodic CNN class for representing functions in PDEs.
 """
 
-from typing import Callable, Sequence, Tuple, Union
-import jax
+from collections.abc import Callable, Sequence
+
 import equinox as eqx
-import equinox.nn as nn
+import jax
+from equinox import nn
 
 Array = jax.Array
 
@@ -50,13 +51,13 @@ class PeriodicCNN(eqx.Module):
     nonlinearities are used. Accepts (C,H,W) or (B,C,H,W); returns same spatial size.
     """
 
-    layers: Tuple[eqx.Module, ...]  # blocks + final conv (no activation)
+    layers: tuple[eqx.Module, ...]  # blocks + final conv (no activation)
 
     def __init__(
         self,
         in_channels: int,
         hidden_channels: Sequence[int] = (32, 64, 64),
-        out_channels: Union[int, None] = None,
+        out_channels: int | None = None,
         kernel_size: int = 3,
         act: Callable[[Array], Array] = jax.nn.gelu,
         *,
@@ -89,7 +90,7 @@ class PeriodicCNN(eqx.Module):
             use_bias=True,
             key=keys[-1],
         )
-        self.layers = tuple([*blocks, final_conv])
+        self.layers = (*blocks, final_conv)
 
     def _forward_single(self, x: Array) -> Array:
         # x: (C, H, W)

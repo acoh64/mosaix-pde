@@ -2,11 +2,12 @@
 This module contains a symbolic equation class for the Cahn-Hilliard equation.
 """
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable
+
+import jax.numpy as jnp  # only to return jnp arrays if you like; optional
 import sympy as sp
 from sympy.utilities.lambdify import lambdify
-import jax.numpy as jnp  # only to return jnp arrays if you like; optional
 
 from .base_sym_eq import BaseSymbolicEquation
 

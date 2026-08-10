@@ -3,7 +3,7 @@ This module contains the Domain class, which is used to set up a simulation doma
 """
 
 import dataclasses
-from typing import Optional, Tuple
+
 import jax
 import jax.numpy as jnp
 
@@ -21,10 +21,10 @@ class Domain:
     -- `units`     are the length units these. values are stored in
     """
 
-    points: Tuple[int, ...]
-    box: Tuple[Tuple[float, float], ...]
+    points: tuple[int, ...]
+    box: tuple[tuple[float, float], ...]
     units: str
-    geometry: Optional[Shape] = None
+    geometry: Shape | None = None
 
     def __post_init__(self):
         self.dx = tuple(
@@ -33,7 +33,7 @@ class Domain:
         )
         self.L = tuple((up_bound - low_bound) for (low_bound, up_bound) in self.box)
 
-    def axes(self) -> Tuple[jax.Array, ...]:
+    def axes(self) -> tuple[jax.Array, ...]:
         return tuple(
             jnp.linspace(low_bound + step / 2, up_bound - step / 2, num=points)
             for (low_bound, up_bound), points, step in zip(
@@ -41,25 +41,25 @@ class Domain:
             )
         )
 
-    def fft_axes(self) -> Tuple[jax.Array, ...]:
+    def fft_axes(self) -> tuple[jax.Array, ...]:
         return tuple(
             jnp.fft.fftfreq(points, step) for points, step in zip(self.points, self.dx)
         )
 
-    def rfft_axes(self) -> Tuple[jax.Array, ...]:
+    def rfft_axes(self) -> tuple[jax.Array, ...]:
         return tuple(
             jnp.fft.rfftfreq(points, step) for points, step in zip(self.points, self.dx)
         )
 
-    def mesh(self) -> Tuple[jax.Array, ...]:
+    def mesh(self) -> tuple[jax.Array, ...]:
         axes = self.axes()
         return tuple(jnp.meshgrid(*axes, indexing="ij"))
 
-    def fft_mesh(self) -> Tuple[jax.Array, ...]:
+    def fft_mesh(self) -> tuple[jax.Array, ...]:
         fft_axes = self.fft_axes()
         return tuple(jnp.meshgrid(*fft_axes, indexing="ij"))
 
-    def rfft_mesh(self) -> Tuple[jax.Array, ...]:
+    def rfft_mesh(self) -> tuple[jax.Array, ...]:
         rfft_axes = self.rfft_axes()
         return tuple(jnp.meshgrid(*rfft_axes, indexing="ij"))
 
