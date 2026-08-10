@@ -94,6 +94,7 @@ The function to minimize is specified through the `objective_function` argument,
 
 For reference, we benchmark the performance of numerically solving and computing gradients of PDE solutions \autoref{fig:benchmark}.
 We report the wall time scaling as a function of grid points of 10,000 time steps of the Cahn-Hilliard equation using a semi-implicit Fourier time stepping method, run on both GPU and CPU with Float32 and Float64 precision.
+The CPU and GPU timings were measured using Intel Xeon Platinum 8562Y+ processors and an NVIDIA L40S GPU with 48 GB of memory, respectively.
 We further show the wall time scaling with respect to the number of parameters when computing gradients through 1,000 time steps of the Cahn-Hilliard equation using forward- and reverse-mode automatic differentiation.
 Finally, we compare a Tsit5 time stepper with our ROCK2 implementation and semi-implicit Fourier method, all coupled with a PID step size controller for the Cahn-Hilliard equation.
 `PDEModel` streamlines model learning and optimization by unifying a Domain, Equation, and Solver.
