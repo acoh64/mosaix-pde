@@ -4,15 +4,14 @@ This module contains the Shape class, which is used to set up a geometry/shape f
 
 import dataclasses
 
+import diffrax as dfx
 import jax
 import jax.numpy as jnp
-from typing import Tuple, Optional
-import diffrax as dfx
-import scipy
 import numpy as np
+import scipy
 from scipy.sparse import coo_matrix, csr_matrix
 
-from .utils.derivatives import _gradx_c, _grady_c, _grad2x_c, _grad2y_c, _grad2xy_c
+from .utils.derivatives import _grad2x_c, _grad2xy_c, _grad2y_c, _gradx_c, _grady_c
 
 Array = jax.Array
 
@@ -25,9 +24,9 @@ class Shape:
     """
 
     binary: Array
-    refine_factor: Optional[float] = None
-    refine_edge: Optional[float] = None
-    dx: Optional[Tuple[float, float]] = (1.0, 1.0)
+    refine_factor: float | None = None
+    refine_edge: float | None = None
+    dx: tuple[float, float] | None = (1.0, 1.0)
     smooth_epsilon: float = 1.0
     smooth_curvature: float = 0.0
     smooth_dt: float = 0.1
@@ -206,7 +205,7 @@ class Shape:
         L = coo_matrix((data, (rows, cols)), shape=(n, n)).tocsr()
         return L, ids
 
-    def get_shape_modes(self, N: Optional[int] = None):
+    def get_shape_modes(self, N: int | None = None):
         """Get the first N eigenvectors of the graph Laplacian of the binary mask.
 
         Creates a graph where nodes are the 1-valued pixels, with edges between

@@ -3,24 +3,25 @@ This module contains various Allen-Cahn equation classes.
 """
 
 import dataclasses
-from typing import Callable, Union
+from collections.abc import Callable
+
+import equinox as eqx
 import jax
 import jax.numpy as jnp
-import equinox as eqx
 
 from ..domains import Domain
-from .base_eq import BaseEquation
-from ..utils.derivatives import _lap_2nd_2D
 from ..utils.derivatives import (
-    _gradx_c,
-    _grady_c,
     _avgx_c2f,
     _avgy_c2f,
     _divx_f2c,
     _divy_f2c,
+    _gradx_c,
     _gradx_c2f,
+    _grady_c,
     _grady_c2f,
+    _lap_2nd_2D,
 )
+from .base_eq import BaseEquation
 
 
 @dataclasses.dataclass
@@ -44,9 +45,9 @@ class AllenCahn2DPeriodic(BaseEquation):
     """Domain of the equation"""
     kappa: float
     """Gradient energy coefficient"""
-    mu: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
+    mu: Callable | eqx.Module  # Can be a callable or Equinox module
     """Function for the chemical potential"""
-    R: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
+    R: Callable | eqx.Module  # Can be a callable or Equinox module
     """Function for the reaction term"""
     derivs: str = "fd"
     """Type of derivative computation"""
@@ -108,13 +109,13 @@ class AllenCahn2DSmoothedBoundary(BaseEquation):
     """Domain of the equation"""
     kappa: float
     """Gradient energy coefficient"""
-    f: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
+    f: Callable | eqx.Module  # Can be a callable or Equinox module
     """Function for the free energy density"""
-    mu: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
+    mu: Callable | eqx.Module  # Can be a callable or Equinox module
     """Function for the chemical potential"""
-    R: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
+    R: Callable | eqx.Module  # Can be a callable or Equinox module
     """Function for the reaction term"""
-    theta: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
+    theta: Callable | eqx.Module  # Can be a callable or Equinox module
     """Function for the contact angle"""
     derivs: str = "fd"
     """Type of derivative computation"""
@@ -165,9 +166,9 @@ class AllenCahn2DPeriodicButlerVolmer(BaseEquation):
     """Domain of the equation"""
     kappa: float
     """Gradient energy coefficient"""
-    mu: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
+    mu: Callable | eqx.Module  # Can be a callable or Equinox module
     """Function for the chemical potential"""
-    j0: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
+    j0: Callable | eqx.Module  # Can be a callable or Equinox module
     """Function for the exchange current"""
     alpha: float
     """Symmetry factor"""
@@ -216,9 +217,9 @@ class AllenCahn2DPeriodicButlerVolmerConstantCurrent(BaseEquation):
     """Domain of the equation"""
     kappa: float
     """Gradient energy coefficient"""
-    mu: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
+    mu: Callable | eqx.Module  # Can be a callable or Equinox module
     """Function for the chemical potential"""
-    j0: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
+    j0: Callable | eqx.Module  # Can be a callable or Equinox module
     """Function for the exchange current"""
     alpha: float
     """Symmetry factor"""
@@ -287,11 +288,11 @@ class AllenCahn2DSmoothedBoundaryButlerVolmerConstantCurrent(BaseEquation):
     """Domain of the equation"""
     kappa: float
     """Gradient energy coefficient"""
-    f: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
+    f: Callable | eqx.Module  # Can be a callable or Equinox module
     """Function for the free energy density"""
-    mu: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
+    mu: Callable | eqx.Module  # Can be a callable or Equinox module
     """Function for the chemical potential"""
-    j0: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
+    j0: Callable | eqx.Module  # Can be a callable or Equinox module
     """Function for the exchange current"""
     alpha: float
     """Symmetry factor"""

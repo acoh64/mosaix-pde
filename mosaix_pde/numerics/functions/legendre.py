@@ -2,11 +2,12 @@
 This module contains the Legendre polynomial expansion class for representing functions in PDEs.
 """
 
+import dataclasses
+from collections.abc import Callable
+
 import equinox as eqx
 import jax
 import jax.numpy as jnp
-from typing import Callable
-import dataclasses
 
 
 class LegendrePolynomialExpansion(eqx.Module):
@@ -57,9 +58,9 @@ class ChemicalPotentialLegendrePolynomials(eqx.Module):
     """Chemical potential Legendre polynomials."""
 
     expansion: LegendrePolynomialExpansion
-    prior_fn: Callable
+    prior_fn: Callable | None
 
-    def __init__(self, params: jax.Array, prior_fn: Callable = None):
+    def __init__(self, params: jax.Array, prior_fn: Callable | None = None):
         super().__init__()
         self.expansion = LegendrePolynomialExpansion(params)
         self.prior_fn = prior_fn
@@ -85,10 +86,10 @@ class FixedDegreeChemicalPotential(eqx.Module):
     """
 
     expansion: LegendrePolynomialExpansion
-    prior_fn: Callable
+    prior_fn: Callable | None
     num_active_params: int
 
-    def __init__(self, params: jax.Array, prior_fn: Callable = None):
+    def __init__(self, params: jax.Array, prior_fn: Callable | None = None):
         super().__init__()
         # Always create expansion with degree 1000
         full_params = jnp.zeros(1001)  # 1000 degree + 1 for constant term
@@ -110,9 +111,9 @@ class TestChemicalPotential(eqx.Module):
     """Test chemical potential."""
 
     params: jax.Array
-    prior_fn: Callable
+    prior_fn: Callable | None
 
-    def __init__(self, params: jax.Array, prior_fn: Callable = None):
+    def __init__(self, params: jax.Array, prior_fn: Callable | None = None):
         super().__init__()
         self.params = params
         self.prior_fn = prior_fn

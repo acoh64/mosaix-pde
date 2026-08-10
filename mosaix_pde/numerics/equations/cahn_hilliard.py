@@ -3,19 +3,14 @@ This module contains various Cahn-Hilliard equation classes.
 """
 
 import dataclasses
-from typing import Callable, Union
+from collections.abc import Callable
+
+import equinox as eqx
 import jax
 import jax.numpy as jnp
-import equinox as eqx
 
 from ..domains import Domain
-from .base_eq import BaseEquation
 from ..utils.derivatives import (
-    _lap_2nd_2D,
-    _lap_2nd_3D,
-    _gradx_c2f,
-    _grady_c2f,
-    _gradz_c2f,
     _avgx_c2f,
     _avgy_c2f,
     _avgz_c2f,
@@ -23,8 +18,14 @@ from ..utils.derivatives import (
     _divy_f2c,
     _divz_f2c,
     _gradx_c,
+    _gradx_c2f,
     _grady_c,
+    _grady_c2f,
+    _gradz_c2f,
+    _lap_2nd_2D,
+    _lap_2nd_3D,
 )
+from .base_eq import BaseEquation
 
 
 @dataclasses.dataclass
@@ -48,9 +49,9 @@ class CahnHilliard2DPeriodic(BaseEquation):
     """Domain of the equation"""
     kappa: float
     """Gradient energy coefficient"""
-    mu: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
+    mu: Callable | eqx.Module  # Can be a callable or Equinox module
     """Function for the chemical potential"""
-    D: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
+    D: Callable | eqx.Module  # Can be a callable or Equinox module
     """Function for the mobility"""
     derivs: str = "fd"
     """Type of derivative computation"""
@@ -130,9 +131,9 @@ class CahnHilliard3DPeriodic(BaseEquation):
     """Domain of the equation"""
     kappa: float
     """Gradient energy coefficient"""
-    mu: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
+    mu: Callable | eqx.Module  # Can be a callable or Equinox module
     """Function for the chemical potential"""
-    D: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
+    D: Callable | eqx.Module  # Can be a callable or Equinox module
     """Function for the mobility"""
     derivs: str = "fd"
     """Type of derivative computation"""
@@ -224,15 +225,15 @@ class CahnHilliard2DSmoothedBoundary(BaseEquation):
     """Domain of the equation"""
     kappa: float
     """Gradient energy coefficient"""
-    f: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
+    f: Callable | eqx.Module  # Can be a callable or Equinox module
     """Function for the free energy density"""
-    mu: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
+    mu: Callable | eqx.Module  # Can be a callable or Equinox module
     """Function for the chemical potential"""
-    D: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
+    D: Callable | eqx.Module  # Can be a callable or Equinox module
     """Function for the mobility"""
-    theta: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
+    theta: Callable | eqx.Module  # Can be a callable or Equinox module
     """Function for the contact angle"""
-    flux: Union[Callable, eqx.Module]  # Can be a callable or Equinox module
+    flux: Callable | eqx.Module  # Can be a callable or Equinox module
     """Function for the normal flux"""
     derivs: str = "fd"
     """Type of derivative computation"""
