@@ -132,6 +132,12 @@ To run the tests in the `tests/` directory, run
 pytest tests/
 ```
 
+## Contributing
+
+Bug reports, feature requests, documentation improvements, and code contributions
+are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for reporting, support,
+development, testing, and pull-request guidelines.
+
 ## TODO
 
 - [ ] Arbitrary boundary conditions
