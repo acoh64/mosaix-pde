@@ -47,7 +47,7 @@ The goal of this package is to provide specialized code for the integration of p
 # Statement of need
 Pattern formation and phase separation are fundamental processes across physics, chemistry, biology, and materials science, with technological applications ranging from developmental biology to nanostructured materials.
 At the same time, the rapid growth of scientific machine learning has shown how partial differential equation (PDE) models can be combined with modern optimization and learning techniques to accelerate discovery, most prominently in applications such as material modeling [@zhao2020; @zhao2023], weather and climate modeling [@kochkov2024], and biophysics [@supekar2023].
-Building on these advances, there is growing interest in extending such capabilities to ever more complicated pattern-forming systems, where fast, differentiable, and GPU-accelerated PDE solvers can enable parameter learning, design optimization, and reinforcement learning–based control.
+Building on these advances, there is growing interest in extending such capabilities to ever more complicated pattern-forming systems, where fast, differentiable, and GPU-accelerated PDE solvers can enable parameter learning, design optimization, and reinforcement learning (RL)–based control.
 To support this, the community needs open-source tools that are performant, easy to use, well documented, and straightforward to extend.
 Existing simulation libraries for pattern formation provide valuable tools, but are often not directly integrated with these machine learning workflows [@walker2023; @burns2020; @zwicker2020; @daubner2025].
 In addition, packages that treat PDEs as reinforcement learning environments are generally restricted to a small set of select equations [@bhan2024; @werner2024].
@@ -57,9 +57,11 @@ Researchers in other domains may extend the modular `Equation`, `Domain`, and `S
 The code is currently being used by researchers to learn models for battery nanoparticles, optimize phase separation in materials, and control pattern formation in Bose-Einstein condensates.
 In the future, we plan to expand the range of physical systems and PDEs supported by the package and continue advancing numerical methods for differentiable simulation, with the goal of providing an accessible and practical framework for machine learning with PDEs.
 
+# Software design
+
 The `mosaix-pde` package is organized around Domains, Equations, and Solvers \autoref{fig:overview}.
 
-![Code structure enables Equation, Domain, and Solver modules to be combined to build PDE models for machine learning applications.\label{fig:overview}](figure1_joss.png)
+![Code structure enables Equation, Domain, and Solver modules to be combined to build PDE models for machine learning applications. An optional Shape converts a binary mask into a smoothed mask for the geometry stored within a Domain.\label{fig:overview}](figure1_joss.png)
 
 The Domain class sets up the computational region for the simulation, including the mesh and axes in both real and Fourier space.
 The Domain also stores the Shape, which is used in the context of the smoothed boundary method.
@@ -90,16 +92,21 @@ This tradeoff between scaling with parameter numbers and convergence of optimiza
 Finally, the `optimize` method provides an interface for minimizing a scalar function of the PDE solution.
 The function to minimize is specified through the `objective_function` argument, and BFGS is used to perform the optimization.
 
-![Benchmarking performance of solvers and gradients with different number of grid points and parameters.\label{fig:benchmark}](figure2_joss.png)
+# Performance
+
+![Benchmarking performance of solvers and gradients. (a) Wall time for 1,000 Cahn-Hilliard time steps using the semi-implicit Fourier solver on CPU and GPU. (b) Forward- and reverse-mode differentiation through 1,000 Cahn-Hilliard time steps on a 64 by 64 grid, using the semi-implicit Fourier solver on an NVIDIA L40S GPU in Float32 and Float64 precision, as the number of parameters increases. (c) Comparison of Tsit5, ROCK2, and semi-implicit Fourier time stepping with PID step size control on an NVIDIA L40S GPU in Float64 precision.\label{fig:benchmark}](figure2_joss.png)
 
 For reference, we benchmark the performance of numerically solving and computing gradients of PDE solutions \autoref{fig:benchmark}.
-We report the wall time scaling as a function of grid points of 10,000 time steps of the Cahn-Hilliard equation using a semi-implicit Fourier time stepping method, run on both GPU and CPU with Float32 and Float64 precision.
+We report the wall time scaling as a function of grid points of 1,000 time steps of the Cahn-Hilliard equation using a semi-implicit Fourier time stepping method, run on both GPU and CPU with Float32 and Float64 precision.
 The CPU and GPU timings were measured using Intel Xeon Platinum 8562Y+ processors and an NVIDIA L40S GPU with 48 GB of memory, respectively.
-We further show the wall time scaling with respect to the number of parameters when computing gradients through 1,000 time steps of the Cahn-Hilliard equation using forward- and reverse-mode automatic differentiation.
-Finally, we compare a Tsit5 time stepper with our ROCK2 implementation and semi-implicit Fourier method, all coupled with a PID step size controller for the Cahn-Hilliard equation.
+The benchmark jobs were allocated one CPU core each.
+We further show the wall time scaling with respect to the number of parameters when computing gradients through 1,000 time steps of the Cahn-Hilliard equation on a 64 by 64 grid using forward- and reverse-mode automatic differentiation on the NVIDIA L40S GPU.
+Finally, we compare a Tsit5 time stepper with our ROCK2 implementation and semi-implicit Fourier method, all coupled with a PID step size controller for the Cahn-Hilliard equation and run on the NVIDIA L40S GPU in Float64 precision.
 `PDEModel` streamlines model learning and optimization by unifying a Domain, Equation, and Solver.
 
-The `PDEEnv` class is useful for turning a PDE into a `Gymnasium`-registered reinforcement learning (RL) environment that can be used to train RL agents with libraries like Stable Baselines [@towers2024; @raffin2021].
+# Reinforcement-learning demonstration
+
+The `PDEEnv` class is useful for turning a PDE into a `Gymnasium`-registered reinforcement learning environment that can be used to train RL agents with libraries like Stable Baselines [@towers2024; @raffin2021].
 In addition to the Domain, Equation, and Solver, the `PDEEnv` class requires a `step_dt`, which is the time span of one step of the environment, and a `numeric_dt` which is the time step to use for numerical integration. 
 These are separate parameters because the reaction time of the agent is often larger than the time step needed for numerical stability.
 Beyond these fields, many other pieces of information must be provided to form the RL environment, including reward functions, observation functions, and reset functions.

@@ -39,10 +39,12 @@ from .numerics.solvers import (
     SemiImplicitFourierSpectral,
     StrangSplitting,
 )
+from .numerics.solvers_rock2 import ROCK2JAX
 from .pde_env import PDEEnv
 from .pde_model import PDEModel
 
 __all__ = [
+    "ROCK2JAX",
     "AllenCahn2DPeriodic",
     "AllenCahn2DSmoothedBoundary",
     "BaseEquation",

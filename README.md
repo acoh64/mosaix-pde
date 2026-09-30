@@ -39,23 +39,33 @@ pip install -U "jax[cuda12]"
 
 ## Examples and tutorials
 
-Standalone Python examples are available in the [`examples/`](examples/)
-directory. Each tutorial notebook in [`docs/notebooks/`](docs/notebooks/) has a
+Standalone Python examples are available in the [`examples/`](https://github.com/acoh64/mosaix-pde/tree/main/examples)
+directory. Each tutorial notebook in [`docs/notebooks/`](https://github.com/acoh64/mosaix-pde/tree/main/docs/notebooks) has a
 corresponding script that can be run outside Jupyter. The notebooks are the primary
 step-by-step tutorials and are also rendered in the
 [online documentation](https://mosaix-pde.readthedocs.io/), while the scripts are
 convenient for running and adapting complete examples.
 
 The full workflow shown in the Usage section below is available as
-[`examples/readme_example.py`](examples/readme_example.py). See the
-[`examples` index](examples/README.md) for a description of every script and its
+[`examples/readme_example.py`](https://github.com/acoh64/mosaix-pde/blob/main/examples/readme_example.py). See the
+[`examples` index](https://github.com/acoh64/mosaix-pde/blob/main/examples/README.md) for a description of every script and its
 corresponding notebook.
 
 ## Usage
 
+This CPU quickstart uses a 32 × 32 grid, 2,000 integration steps, and a
+13-parameter pointwise neural network. We fit it with up to 20 Levenberg–Marquardt
+iterations (`method="least_squares"`), which is practical for this small number of
+parameters. The example reports trajectory prediction error before and after
+training so you can check that the fit improves. The iteration cap keeps the
+example short; it does not guarantee optimizer convergence or recovery of the
+chemical potential outside the sampled concentrations. The first run also
+includes JAX compilation. For a larger CNN trained with BFGS, see the
+[neural-network tutorial](https://mosaix-pde.readthedocs.io/en/latest/notebooks/optimization_neural_network.html).
+
 Here is an example of solving the Cahn-Hilliard equation in 2D with periodic boundary conditions using a semi-implicit Fourier method:
 
-```bash
+```python
 import jax
 import jax.numpy as jnp
 
@@ -65,7 +75,7 @@ from mosaix_pde import SemiImplicitFourierSpectral
 from mosaix_pde import Domain
 from mosaix_pde import PeriodicCNN
 
-Nx = Ny = 128
+Nx = Ny = 32
 Lx = Ly = 0.01 * Nx
 
 domain = Domain((Nx, Ny), ((-Lx / 2, Lx / 2), (-Ly / 2, Ly / 2)), "dimensionless")
@@ -77,24 +87,24 @@ params = {"kappa": 0.002, "mu": lambda c: jnp.log(c / (1.0 - c)) + 3.0 * (1.0 - 
 solver_params = {"A": 0.5}
 
 key = jax.random.PRNGKey(0)
-y0 = jnp.clip(0.01 * jax.random.normal(key, (Nx, Ny)) + 0.5, 0.0, 1.0)
-ts = jnp.linspace(0.0, 0.02, 100)
+y0 = jnp.clip(0.1 * jax.random.normal(key, (Nx, Ny)) + 0.5, 0.01, 0.99)
+ts = jnp.linspace(0.0, 0.002, 5)
 
 sol = opt_model.solve(params, y0, ts, solver_params, dt0=0.000001, max_steps=1000000)
 ```
 
 Next, here is an example of using the previous solution as a dataset to fit a neural network for the chemical potential term:
 
-```bash
+```python
 data = {}
 data['ys'] = sol
 data['ts'] = ts
 
 model = PeriodicCNN(
     in_channels=1,
-    hidden_channels=(32, 64, 64),
+    hidden_channels=(4,),
     out_channels=1,
-    kernel_size=3,
+    kernel_size=1,
     key=jax.random.PRNGKey(0),
 )
 
@@ -104,9 +114,18 @@ solver_parameters = {"A": 0.5}
 weights = {"mu": None}
 lambda_reg = 0.0
 
-inds = [[30,40,50], [50,60,70], [70,80,90]]
+inds = [[0, 1, 2], [2, 3, 4]]
 
-res = opt_model.train(data, inds, init_params, static_params, solver_parameters, weights, lambda_reg, method="mse", max_steps=100)
+def trajectory_mse(parameters):
+    predicted = opt_model.solve(parameters, y0, ts, solver_parameters)
+    return jnp.mean((predicted[1:] - sol[1:]) ** 2)
+
+initial_mse = float(trajectory_mse({**init_params, **static_params}))
+res = opt_model.train(data, inds, init_params, static_params, solver_parameters, weights, lambda_reg, method="least_squares", max_steps=20)
+final_mse = float(trajectory_mse(res))
+print(f"Trajectory MSE before training: {initial_mse:.3e}")
+print(f"Trajectory MSE after training:  {final_mse:.3e}")
+print(f"Error reduction: {initial_mse / final_mse:.1f}x")
 ```
 
 ## Current Model Implementations
@@ -135,7 +154,7 @@ pytest tests/
 ## Contributing
 
 Bug reports, feature requests, documentation improvements, and code contributions
-are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for reporting, support,
+are welcome. See [CONTRIBUTING.md](https://github.com/acoh64/mosaix-pde/blob/main/CONTRIBUTING.md) for reporting, support,
 development, testing, and pull-request guidelines.
 
 ## TODO
