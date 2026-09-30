@@ -103,7 +103,7 @@ class PDEModel:
                 for adaptive step sizing. Defaults to ConstantStepSize().
 
         Returns:
-            Solution array with shape (len(ts), *y0.shape).
+            Solution array with shape ``(len(ts), *y0.shape)``.
         """
 
         if solver_parameters is None:
@@ -167,7 +167,7 @@ class PDEModel:
                 differentiation. Defaults to ForwardMode().
 
         Returns:
-            Residuals array with shape (timepoints, *y0.shape).
+            Residuals array with shape ``(timepoints, *y0.shape)``.
                 The residuals are computed as: values - predicted[1:] (values should not include the initial condition).
         """
         if adjoint is None:
@@ -265,7 +265,7 @@ class PDEModel:
 
         Returns:
             Tuple[jax.Array, float]: Tuple containing:
-                - batch_residuals: Residuals array with shape (batch_size, timepoints, *y0.shape)
+                - batch_residuals: Residuals array with shape ``(batch_size, timepoints, *y0.shape)``
                 - reg: Scalar regularization term
         """
 
@@ -375,11 +375,11 @@ class PDEModel:
                 Should have the same structure as opt_parameters.
             lambda_reg (float): Regularization coefficient. Controls the strength of
                 parameter regularization.
-            method (str, optional): Optimization method. Options:
-                - "least_squares": Uses Levenberg-Marquardt algorithm with ForwardMode
-                  adjoint. Best when parameter number is small (not using neural networks).
-                - "mse": Uses BFGS algorithm with RecursiveCheckpointAdjoint. Better
-                  when parameter number is large (using neural networks).
+            method (str, optional): Optimization method. ``"least_squares"`` uses
+                Levenberg-Marquardt with a ForwardMode adjoint and is best for a small
+                number of parameters. ``"mse"`` uses BFGS with a
+                RecursiveCheckpointAdjoint and is better for many parameters,
+                such as neural networks.
             max_steps (int, optional): Maximum number of optimization iterations.
                 Defaults to 100.
 
@@ -495,7 +495,7 @@ class PDEModel:
 
         Args:
             objective_function (Callable): A callable function that takes the solution
-                array (shape: (len(ts), *y0.shape)) and returns a scalar value to minimize.
+                array (shape: ``(len(ts), *y0.shape)``) and returns a scalar value to minimize.
                 The function should be JAX-compatible for automatic differentiation.
             y0: Initial condition array. Shape should match the spatial dimensions of
                 the domain.

@@ -212,7 +212,4 @@ ppo_tensorboard/
 
 timing_code/
 
-mosaix_pde/numerics/rock2_tableau.py
-mosaix_pde/numerics/solvers_rock2.py
-
 notebooks/
