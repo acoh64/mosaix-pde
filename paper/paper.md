@@ -46,7 +46,7 @@ The goal of this package is to provide specialized code for the integration of p
 
 # Statement of need
 Pattern formation and phase separation are fundamental processes across physics, chemistry, biology, and materials science, with technological applications ranging from developmental biology to nanostructured materials.
-At the same time, the rapid growth of scientific machine learning has shown how partial differential equation (PDE) models can be combined with modern optimization and learning techniques to accelerate discovery, most prominently in applications such as material modeling [@zhao2020; @zhao2023], weather and climate modeling [@kochkov2024], and biophysics [@supekar2023].
+At the same time, the rapid growth of scientific machine learning has shown how PDE models can be combined with modern optimization and learning techniques to accelerate discovery, most prominently in applications such as material modeling [@zhao2020; @zhao2023], weather and climate modeling [@kochkov2024], and biophysics [@supekar2023].
 Building on these advances, there is growing interest in extending such capabilities to ever more complicated pattern-forming systems, where fast, differentiable, and GPU-accelerated PDE solvers can enable parameter learning, design optimization, and reinforcement learning (RL)–based control.
 To support this, the community needs open-source tools that are performant, easy to use, well documented, and straightforward to extend.
 Existing simulation libraries for pattern formation provide valuable tools, but are often not directly integrated with these machine learning workflows [@walker2023; @burns2020; @zwicker2020; @daubner2025].
@@ -59,7 +59,7 @@ In the future, we plan to expand the range of physical systems and PDEs supporte
 
 # Software design
 
-The `mosaix-pde` package is organized around Domains, Equations, and Solvers \autoref{fig:overview}.
+The `mosaix-pde` package is organized around Domains, Equations, and Solvers, as illustrated in \autoref{fig:overview}.
 
 ![Code structure enables Equation, Domain, and Solver modules to be combined to build PDE models for machine learning applications. An optional Shape converts a binary mask into a smoothed mask for the geometry stored within a Domain.\label{fig:overview}](figure1_joss.png)
 
@@ -84,24 +84,28 @@ The `train` method uses a multiple shooting approach which is both computational
 The multiple shooting approach works by `vmap`-ing over multiple starting points in the dataset and evaluating the loss at future time points relative to each starting point. 
 The specific starting points and residual evaluation points are specified through the `inds` argument of the `train` function.
 Currently, the optimization can be performed using the Levenberg-Marquardt or Broyden-Fletcher-Goldfarb-Shanno (BFGS) algorithms, provided through the `optimistix` package [@optimistix2024].
-Gradients can be computed using forward- or reverse-mode automatic differentiation methods, which scale differently with the number of parameters \autoref{fig:benchmark} [@ma2021].
+Gradients can be computed using forward- or reverse-mode automatic differentiation methods, which scale differently with the number of parameters [@ma2021].
 The Levenberg-Marquardt method requires Jacobians of the residuals for the Hessian approximation, which can be computed using forward mode automatic differentiation.
 Since the Levenberg-Marquardt method uses Gauss-Newton approximations of the Hessian, this method generally converges faster than BFGS. 
-However, BFGS does not require the Jacobian of the residuals for the Hessian approximation, and thus the gradients can be computed easily using backpropagation, which scales much better with the number of parameters \autoref{fig:benchmark}.
+However, BFGS does not require the Jacobian of the residuals for the Hessian approximation, and thus the gradients can be computed easily using backpropagation, which scales much better with the number of parameters.
 This tradeoff between scaling with parameter numbers and convergence of optimization must be considered for these differentiable physics optimization problems.
 Finally, the `optimize` method provides an interface for minimizing a scalar function of the PDE solution.
 The function to minimize is specified through the `objective_function` argument, and BFGS is used to perform the optimization.
 
 # Performance
 
-![Benchmarking performance of solvers and gradients. (a) Wall time for 1,000 Cahn-Hilliard time steps using the semi-implicit Fourier solver on CPU and GPU. (b) Forward- and reverse-mode differentiation through 1,000 Cahn-Hilliard time steps on a 64 by 64 grid, using the semi-implicit Fourier solver on an NVIDIA L40S GPU in Float32 and Float64 precision, as the number of parameters increases. (c) Comparison of Tsit5, ROCK2, and semi-implicit Fourier time stepping with PID step size control on an NVIDIA L40S GPU in Float64 precision.\label{fig:benchmark}](figure2_joss.png)
-
-For reference, we benchmark the performance of numerically solving and computing gradients of PDE solutions \autoref{fig:benchmark}.
-We report the wall time scaling as a function of grid points of 1,000 time steps of the Cahn-Hilliard equation using a semi-implicit Fourier time stepping method, run on both GPU and CPU with Float32 and Float64 precision.
+We benchmark the performance of numerically solving and computing gradients of solutions to the Cahn-Hilliard equation.
 The CPU and GPU timings were measured using Intel Xeon Platinum 8562Y+ processors and an NVIDIA L40S GPU with 48 GB of memory, respectively.
 The benchmark jobs were allocated one CPU core each.
-We further show the wall time scaling with respect to the number of parameters when computing gradients through 1,000 time steps of the Cahn-Hilliard equation on a 64 by 64 grid using forward- and reverse-mode automatic differentiation on the NVIDIA L40S GPU.
-Finally, we compare a Tsit5 time stepper with our ROCK2 implementation and semi-implicit Fourier method, all coupled with a PID step size controller for the Cahn-Hilliard equation and run on the NVIDIA L40S GPU in Float64 precision.
+For the solver scaling benchmark, we run 1,000 time steps using a semi-implicit Fourier time stepping method on both GPU and CPU with Float32 and Float64 precision.
+The wall time as a function of the number of grid points is shown in \autoref{fig:benchmark}(a).
+For the gradient benchmark, we differentiate through 1,000 time steps on a 64 by 64 grid using the semi-implicit Fourier solver and forward- and reverse-mode automatic differentiation on the NVIDIA L40S GPU in Float32 and Float64 precision.
+As shown in \autoref{fig:benchmark}(b), forward-mode wall time increases with the number of parameters, whereas reverse-mode wall time remains approximately constant over the tested range.
+Finally, we compare a Tsit5 time stepper with our ROCK2 implementation and semi-implicit Fourier method, all coupled with a PID step size controller and run on the NVIDIA L40S GPU in Float64 precision.
+The solver timings as a function of the number of grid points are shown in \autoref{fig:benchmark}(c).
+
+![Benchmarking performance of solvers and gradients. (a) Wall time for 1,000 Cahn-Hilliard time steps using the semi-implicit Fourier solver on CPU and GPU. (b) Forward- and reverse-mode differentiation through 1,000 Cahn-Hilliard time steps on a 64 by 64 grid, using the semi-implicit Fourier solver on an NVIDIA L40S GPU in Float32 and Float64 precision, as the number of parameters increases. (c) Comparison of Tsit5, ROCK2, and semi-implicit Fourier time stepping with PID step size control on an NVIDIA L40S GPU in Float64 precision.\label{fig:benchmark}](figure2_joss.png)
+
 `PDEModel` streamlines model learning and optimization by unifying a Domain, Equation, and Solver.
 
 # Reinforcement-learning demonstration
@@ -113,10 +117,11 @@ Beyond these fields, many other pieces of information must be provided to form t
 
 ![Single episode of an RL environment created from the Gross-Pitaevskii equation.\label{fig:rl_env}](figure3_joss.png)
 
-We demonstrate an example of creating an RL environment designed to form vortices in a Bose-Einstein condensate by controlling the position of an external laser source \autoref{fig:rl_env}.
+In \autoref{fig:rl_env}, we demonstrate an example of creating an RL environment designed to form vortices in a Bose-Einstein condensate by controlling the position of an external laser source.
 The episode is simulated by sampling random actions that move the position of the laser (red line), where the reward is calculated by counting the number of vortices in the condensate (black and white circles).
 
 # Acknowledgments
+A.E.C. was supported by the National Defense Science and Engineering Graduate Fellowship.
 The authors acknowledge the MIT Office of Research Computing and Data for providing computational resources and advice on open-source scientific computing software.
 
 # References
