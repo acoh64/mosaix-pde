@@ -1,4 +1,4 @@
-"""Plot the three Figure 2 panels from saved timing measurements."""
+"""Plot the three benchmark panels from saved timing measurements."""
 
 import json
 from pathlib import Path

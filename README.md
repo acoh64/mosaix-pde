@@ -10,34 +10,37 @@ You can find the full documentation on [read the docs](https://mosaix-pde.readth
 
 ## Installation
 
-`mosaix-pde` requires Python 3.10 or later. Clone the repository and install
-the package in a Conda environment:
+`mosaix-pde` requires Python 3.10 or later and Git. Create and activate a Conda environment:
 
 ```bash
-git clone https://github.com/acoh64/mosaix-pde.git
-cd mosaix-pde
 conda create -y -n mosaix-pde-env python=3.12
 conda activate mosaix-pde-env
-python -m pip install -e .
 ```
 
-Alternatively, Python's built-in `venv` can be used after cloning the
-repository:
+Alternatively, use Python's built-in `venv`:
 
 ```bash
 python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-python -m pip install --upgrade pip
-python -m pip install -e .
+source .venv/bin/activate  # On Windows PowerShell: .\.venv\Scripts\Activate.ps1
 ```
 
-By default, it will install the CPU version of JAX.
-To use with GPU, run:
+With either environment active, install `mosaix-pde` from GitHub:
+
 ```bash
-pip install -U "jax[cuda12]"
+python -m pip install git+https://github.com/acoh64/mosaix-pde.git
 ```
+
+This installs JAX for CPU use. For GPU support, follow the
+[JAX installation guide](https://docs.jax.dev/en/latest/installation.html).
+For an editable installation, see the [development setup](https://github.com/acoh64/mosaix-pde/blob/main/CONTRIBUTING.md#development-setup).
 
 ## Examples and tutorials
+
+[Run the 2D Cahn–Hilliard tutorial in Google Colab](https://colab.research.google.com/github/acoh64/mosaix-pde/blob/main/docs/notebooks/solving_pde.ipynb)
+to solve a PDE and animate the result in your browser.
+
+To implement your own PDE, follow the [custom equation tutorial](https://github.com/acoh64/mosaix-pde/blob/main/docs/notebooks/custom_equation.ipynb),
+which defines a diffusion equation and solves it with `PDEModel`.
 
 Standalone Python examples are available in the [`examples/`](https://github.com/acoh64/mosaix-pde/tree/main/examples)
 directory. Each tutorial notebook in [`docs/notebooks/`](https://github.com/acoh64/mosaix-pde/tree/main/docs/notebooks) has a

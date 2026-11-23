@@ -66,9 +66,9 @@ The `mosaix-pde` package is organized around Domains, Equations, and Solvers, as
 The Domain class sets up the computational region for the simulation, including the mesh and axes in both real and Fourier space.
 The Domain also stores the Shape, which is used in the context of the smoothed boundary method.
 The Shape is initialized with a binary mask where 1s indicate the geometry and 0s indicate the empty space.
-Upon initialization, the binary mask is converted to a mask with a smoothly varying shape parameter at the boundary, as required for the smoothed boundary method.
-This smoothing is accomplished by evolving an Allen-Cahn equation with a Laplacian term with reduced curvature minimization to maintain sharply curved features of the original shape.
-The degree of smoothing and curvature minimization can be controlled with hyperparameters.
+During initialization, `Shape` evolves the mask using an auxiliary Allen–Cahn-type equation to produce a smooth transition across the boundary, as required for the smoothed boundary method.
+The transition width is adjustable, and a modified Laplacian term controls how strongly curvature affects the smoothing, helping preserve sharply curved features of the original shape.
+This auxiliary equation is used only to prepare the geometry. The physical PDE is then solved on the resulting domain.
 The Equation class consists of implementations of the right hand side of the various PDEs with both finite difference and Fourier spectral methods. 
 Each class of PDE is contained in a module, and within each module there exists different implementations of the PDE for different sets of parameters, dimensionality, and other variations.
 Parameters for the PDEs can in general be `Equinox` modules [@kidger2021equinox], making it easy to take gradients with respect to the parameters regardless of the type of function using filter or partition transformations.
@@ -76,7 +76,7 @@ Several useful functions that can be used as PDE parameters are provided as `Equ
 The solvers are subclasses of `diffrax.AbstractSolver` and provide implementations of specialized time stepping methods for specific PDEs.
 The specification of a Domain, Equation, and a Solver is required for all downstream use cases of `mosaix-pde`.
 
-Two interfaces are provided through the `PDEModel` and `PDEEnv` class for integrating with machine learning methods.
+`PDEModel` provides methods for solving PDEs, fitting parameters, and optimizing objectives. `PDEEnv` exposes a PDE simulation as a reinforcement-learning environment in which an agent takes actions and receives observations and rewards.
 The `PDEModel` is initialized with a combination of a Domain, Equation, and Solver, and provides three main methods.
 The first is a `solve` method for solving the specified Equation on the given Domain with the specified Solver.
 In addition, the `train` method provides the utilities for fitting parameters or functions within the Equation to a dataset.
@@ -92,6 +92,18 @@ This tradeoff between scaling with parameter numbers and convergence of optimiza
 Finally, the `optimize` method provides an interface for minimizing a scalar function of the PDE solution.
 The function to minimize is specified through the `objective_function` argument, and BFGS is used to perform the optimization.
 
+# Reinforcement-learning demonstration
+
+The `PDEEnv` class is useful for turning a PDE into a `Gymnasium`-registered reinforcement learning environment that can be used to train RL agents with libraries like Stable Baselines [@towers2024; @raffin2021].
+In addition to the Domain, Equation, and Solver, the `PDEEnv` class requires a `step_dt`, which is the time span of one step of the environment, and a `numeric_dt` which is the time step to use for numerical integration.
+These are separate parameters because the reaction time of the agent is often larger than the time step needed for numerical stability.
+Beyond these fields, many other pieces of information must be provided to form the RL environment, including reward functions, observation functions, and reset functions.
+
+![Single episode of an RL environment created from the Gross-Pitaevskii equation.\label{fig:rl_env}](figure3_joss.png)
+
+In \autoref{fig:rl_env}, we demonstrate an example of creating an RL environment designed to form vortices in a Bose-Einstein condensate by controlling the position of an external laser source.
+The episode is simulated by sampling random actions that move the position of the laser (red line), where the reward is calculated by counting the number of vortices in the condensate (black and white circles).
+
 # Performance
 
 We benchmark the performance of numerically solving and computing gradients of solutions to the Cahn-Hilliard equation.
@@ -105,20 +117,6 @@ Finally, we compare a Tsit5 time stepper with our ROCK2 implementation and semi-
 The solver timings as a function of the number of grid points are shown in \autoref{fig:benchmark}(c).
 
 ![Benchmarking performance of solvers and gradients. (a) Wall time for 1,000 Cahn-Hilliard time steps using the semi-implicit Fourier solver on CPU and GPU. (b) Forward- and reverse-mode differentiation through 1,000 Cahn-Hilliard time steps on a 64 by 64 grid, using the semi-implicit Fourier solver on an NVIDIA L40S GPU in Float32 and Float64 precision, as the number of parameters increases. (c) Comparison of Tsit5, ROCK2, and semi-implicit Fourier time stepping with PID step size control on an NVIDIA L40S GPU in Float64 precision.\label{fig:benchmark}](figure2_joss.png)
-
-`PDEModel` streamlines model learning and optimization by unifying a Domain, Equation, and Solver.
-
-# Reinforcement-learning demonstration
-
-The `PDEEnv` class is useful for turning a PDE into a `Gymnasium`-registered reinforcement learning environment that can be used to train RL agents with libraries like Stable Baselines [@towers2024; @raffin2021].
-In addition to the Domain, Equation, and Solver, the `PDEEnv` class requires a `step_dt`, which is the time span of one step of the environment, and a `numeric_dt` which is the time step to use for numerical integration. 
-These are separate parameters because the reaction time of the agent is often larger than the time step needed for numerical stability.
-Beyond these fields, many other pieces of information must be provided to form the RL environment, including reward functions, observation functions, and reset functions.
-
-![Single episode of an RL environment created from the Gross-Pitaevskii equation.\label{fig:rl_env}](figure3_joss.png)
-
-In \autoref{fig:rl_env}, we demonstrate an example of creating an RL environment designed to form vortices in a Bose-Einstein condensate by controlling the position of an external laser source.
-The episode is simulated by sampling random actions that move the position of the laser (red line), where the reward is calculated by counting the number of vortices in the condensate (black and white circles).
 
 # Acknowledgments
 A.E.C. was supported by the National Defense Science and Engineering Graduate Fellowship.

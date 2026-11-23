@@ -11,6 +11,7 @@ python examples/solving_pde.py
 | --- | --- | --- |
 | [`readme_example.py`](readme_example.py) | [README usage example](../README.md#usage) | Solve a Cahn--Hilliard equation and train a periodic CNN parameterization. |
 | [`solving_pde.py`](solving_pde.py) | [`solving_pde.ipynb`](../docs/notebooks/solving_pde.ipynb) | Solve and animate a periodic two-dimensional Cahn--Hilliard equation. |
+| [`custom_equation.py`](custom_equation.py) | [`custom_equation.ipynb`](../docs/notebooks/custom_equation.ipynb) | Define a periodic diffusion equation and check that its solution conserves mass. |
 | [`solving_pde_smoothed_boundary.py`](solving_pde_smoothed_boundary.py) | [`solving_pde_smoothed_boundary.ipynb`](../docs/notebooks/solving_pde_smoothed_boundary.ipynb) | Solve an Allen--Cahn equation on a smoothed, nonrectangular boundary. |
 | [`optimization_neural_network.py`](optimization_neural_network.py) | [`optimization_neural_network.ipynb`](../docs/notebooks/optimization_neural_network.ipynb) | Learn a Cahn--Hilliard chemical potential with a periodic CNN. |
 | [`optimization_3d.py`](optimization_3d.py) | [`optimization_3D.ipynb`](../docs/notebooks/optimization_3D.ipynb) | Fit constitutive functions in a three-dimensional Cahn--Hilliard model. |
