@@ -6,6 +6,8 @@ The notebooks below explain complete simulation, optimization, and control
 workflows. Optimization and reinforcement-learning examples can take several
 minutes or longer on CPU.
 
+You can also `run the 2D Cahn–Hilliard tutorial in Google Colab <https://colab.research.google.com/github/acoh64/mosaix-pde/blob/main/docs/notebooks/solving_pde.ipynb>`_.
+
 .. toctree::
    :maxdepth: 1
 

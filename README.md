@@ -36,6 +36,9 @@ For an editable installation, see the [development setup](https://github.com/aco
 
 ## Examples and tutorials
 
+[Run the 2D Cahn–Hilliard tutorial in Google Colab](https://colab.research.google.com/github/acoh64/mosaix-pde/blob/main/docs/notebooks/solving_pde.ipynb)
+to solve a PDE and animate the result in your browser.
+
 Standalone Python examples are available in the [`examples/`](https://github.com/acoh64/mosaix-pde/tree/main/examples)
 directory. Each tutorial notebook in [`docs/notebooks/`](https://github.com/acoh64/mosaix-pde/tree/main/docs/notebooks) has a
 corresponding script that can be run outside Jupyter. The notebooks are the primary
