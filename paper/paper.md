@@ -66,9 +66,9 @@ The `mosaix-pde` package is organized around Domains, Equations, and Solvers, as
 The Domain class sets up the computational region for the simulation, including the mesh and axes in both real and Fourier space.
 The Domain also stores the Shape, which is used in the context of the smoothed boundary method.
 The Shape is initialized with a binary mask where 1s indicate the geometry and 0s indicate the empty space.
-Upon initialization, the binary mask is converted to a mask with a smoothly varying shape parameter at the boundary, as required for the smoothed boundary method.
-This smoothing is accomplished by evolving an Allen-Cahn equation with a Laplacian term with reduced curvature minimization to maintain sharply curved features of the original shape.
-The degree of smoothing and curvature minimization can be controlled with hyperparameters.
+During initialization, `Shape` evolves the mask using an auxiliary Allen–Cahn-type equation to produce a smooth transition across the boundary, as required for the smoothed boundary method.
+The transition width is adjustable, and a modified Laplacian term controls how strongly curvature affects the smoothing, helping preserve sharply curved features of the original shape.
+This auxiliary equation is used only to prepare the geometry. The physical PDE is then solved on the resulting domain.
 The Equation class consists of implementations of the right hand side of the various PDEs with both finite difference and Fourier spectral methods. 
 Each class of PDE is contained in a module, and within each module there exists different implementations of the PDE for different sets of parameters, dimensionality, and other variations.
 Parameters for the PDEs can in general be `Equinox` modules [@kidger2021equinox], making it easy to take gradients with respect to the parameters regardless of the type of function using filter or partition transformations.
