@@ -12,6 +12,7 @@ You can also `run the 2D Cahn–Hilliard tutorial in Google Colab <https://colab
    :maxdepth: 1
 
    notebooks/solving_pde.ipynb
+   notebooks/custom_equation.ipynb
    notebooks/solving_pde_smoothed_boundary.ipynb
    notebooks/optimization_neural_network.ipynb
    notebooks/optimization_3D.ipynb
