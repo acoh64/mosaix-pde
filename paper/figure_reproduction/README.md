@@ -10,7 +10,7 @@ The scripts support CPU execution. GPU execution requires a CUDA-enabled JAX
 installation and a compatible NVIDIA GPU. Timings depend on hardware and
 software versions.
 
-## Figure 2: solver and gradient benchmarks
+## Figure 3: solver and gradient benchmarks
 
 From `paper/figure_reproduction/figure2`, replot the paper's saved measurements:
 
@@ -70,7 +70,7 @@ To plot a complete new sweep, run `python plot_figure2.py --data-dir generated`.
 The solver-comparison script also supports the supplementary Allen–Cahn cases
 included in its submission file.
 
-## Figure 3: random-action PDE environment
+## Figure 2: random-action PDE environment
 
 From `paper/figure_reproduction/figure3`:
 
